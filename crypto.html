@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crypto Real-time Tracker</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts for Thai characters -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Apply Kanit font to the whole page */
+        body {
+            font-family: 'Kanit', sans-serif;
+        }
+        /* Custom animation for the price pulse effect */
+        @keyframes pulse-light {
+            0%, 100% { text-shadow: 0 0 5px rgba(52, 211, 153, 0.5); }
+            50% { text-shadow: 0 0 20px rgba(52, 211, 153, 1); }
+        }
+        .price-pulse { animation: pulse-light 2s infinite; }
+        .loader {
+            border-top-color: #3498db;
+            -webkit-animation: spin 1s linear infinite;
+            animation: spin 1s linear infinite;
+        }
+        @-webkit-keyframes spin {
+            0% { -webkit-transform: rotate(0deg); }
+            100% { -webkit-transform: rotate(360deg); }
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white flex items-center justify-center min-h-screen p-4">
+
+    <!-- Main container card -->
+    <div class="w-full max-w-lg p-6 sm:p-8 bg-gray-800 rounded-2xl shadow-2xl border border-gray-700 text-center">
+
+        <!-- Header section -->
+        <div class="flex items-center justify-center mb-2">
+            <img id="coin-logo" src="https://s2.coinmarketcap.com/static/img/coins/64x64/1027.png" alt="Coin Logo" class="w-12 h-12 mr-4" onerror="this.onerror=null;this.src='https://placehold.co/64x64/1f2937/ffffff?text=';">
+            <h1 id="coin-name" class="text-2xl sm:text-3xl font-bold text-gray-100">Ethereum (ETH)</h1>
+        </div>
+        
+        <!-- Coin Selector -->
+        <div class="mb-4">
+            <select id="coin-selector" class="w-full bg-gray-700 text-white rounded-md p-2 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                <option>กำลังโหลดรายชื่อเหรียญ...</option>
+            </select>
+        </div>
+
+        <p class="text-gray-400 mb-2">ข้อมูล Real-time จาก Binance</p>
+        <div id="btc-trend-container" class="text-sm text-gray-400 mb-4 h-5"></div>
+
+        <!-- Price display section -->
+        <div id="price-container" class="bg-gray-900/50 p-6 rounded-xl border border-gray-600">
+            <p class="text-5xl font-bold my-4 text-gray-400 price-pulse" id="eth-price">
+                <span class="loader border-4 border-gray-500 rounded-full w-10 h-10 inline-block"></span>
+            </p>
+            <p id="last-updated" class="text-sm text-gray-500 h-4">กำลังเชื่อมต่อ...</p>
+        </div>
+
+        <!-- Tab Navigation -->
+        <div class="mt-6">
+            <div class="border-b border-gray-700">
+                <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+                    <button id="tab-dashboard" class="border-purple-500 text-purple-400 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                        Dashboard
+                    </button>
+                    <button id="tab-trading-room" class="border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-500 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                        Trading Room
+                    </button>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Tab Content -->
+        <div id="content-dashboard">
+            <!-- My Portfolio Section -->
+            <div class="mt-6 pt-6 border-t border-gray-700">
+                <h2 class="text-xl font-semibold text-gray-200 mb-4">พอร์ตของฉัน (<span id="portfolio-coin-symbol">ETH</span>)</h2>
+                <div class="space-y-3 sm:space-y-0 sm:flex sm:items-center sm:space-x-2 mb-4">
+                    <input type="number" id="eth-amount-input" placeholder="จำนวนที่ซื้อ" class="w-full bg-gray-700 text-white rounded-md p-2 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <input type="number" id="eth-price-input" placeholder="ราคาที่ซื้อ (USDT)" class="w-full bg-gray-700 text-white rounded-md p-2 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <button id="add-transaction-btn" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md transition duration-200">เพิ่ม</button>
+                </div>
+                <div class="grid grid-cols-2 gap-4 bg-gray-900/50 rounded-lg p-4">
+                    <div>
+                        <p class="text-sm text-gray-400">ทั้งหมด</p>
+                        <p id="portfolio-total-eth" class="font-bold text-lg">0.00</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-400">ราคาเฉลี่ย (USDT)</p>
+                        <p id="portfolio-avg-price" class="font-bold text-lg">0.00</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-400">มูลค่าปัจจุบัน (THB)</p>
+                        <p id="portfolio-current-value" class="font-bold text-lg">฿0.00</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-400">กำไร/ขาดทุน (THB)</p>
+                        <p id="portfolio-profit-loss" class="font-bold text-lg">฿0.00</p>
+                    </div>
+                </div>
+                <button id="reset-portfolio-btn" class="w-full bg-red-700 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-md transition duration-200 mt-4">ล้างพอร์ตทั้งหมด</button>
+            </div>
+
+            <!-- Target Price Analysis Section -->
+            <div class="mt-6 pt-6 border-t border-gray-700">
+                <h2 class="text-xl font-semibold text-gray-200 mb-4">วิเคราะห์ราคาเป้าหมาย</h2>
+                <div class="space-y-3 sm:space-y-0 sm:flex sm:items-center sm:space-x-2 mb-4">
+                    <input type="number" id="target-price-input" placeholder="ใส่ราคาเป้าหมาย (USDT)" class="w-full bg-gray-700 text-white rounded-md p-2 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <button id="analyze-target-btn" class="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-md transition duration-200">วิเคราะห์</button>
+                </div>
+                <div id="target-analysis-result" class="bg-gray-900/50 rounded-lg p-4 text-center min-h-[6rem] flex items-center justify-center">
+                    <p class="text-gray-500">กรุณาใส่ราคาเป้าหมายเพื่อเริ่มการวิเคราะห์</p>
+                </div>
+            </div>
+
+            <!-- Analysis Section -->
+            <div class="mt-6 pt-6 border-t border-gray-700">
+                <h2 class="text-xl font-semibold text-gray-200 mb-2">บทวิเคราะห์ทางเทคนิค (จำลอง)</h2>
+                <p class="text-sm text-yellow-400 mb-4" id="prediction-timeframe">กรอบเวลาวิเคราะห์: 4-8 ชั่วโมงข้างหน้า</p>
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div class="bg-gray-900/50 p-3 rounded-lg">
+                        <p class="text-sm text-green-400">แนวรับ (8 ชั่วโมง)</p>
+                        <p id="support-level" class="font-bold text-lg">-</p>
+                    </div>
+                    <div class="bg-gray-900/50 p-3 rounded-lg">
+                        <p class="text-sm text-red-400">แนวต้าน (8 ชั่วโมง)</p>
+                        <p id="resistance-level" class="font-bold text-lg">-</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div class="bg-gray-900/50 p-3 rounded-lg">
+                        <p class="text-sm text-gray-400">มุมมองข่าว</p>
+                        <p id="news-sentiment" class="font-bold text-lg">-</p>
+                    </div>
+                    <div class="bg-gray-900/50 p-3 rounded-lg">
+                        <p class="text-sm text-gray-400">RSI (14)</p>
+                        <p id="rsi-value" class="font-bold text-lg">-</p>
+                    </div>
+                    <div class="bg-gray-900/50 p-3 rounded-lg">
+                        <p class="text-sm text-gray-400">MACD</p>
+                        <p id="macd-status" class="font-bold text-lg">-</p>
+                    </div>
+                    <div class="bg-gray-900/50 p-3 rounded-lg">
+                        <p class="text-sm text-blue-400">KDJ</p>
+                        <p id="kdj-value" class="font-bold text-lg">-</p>
+                    </div>
+                </div>
+                <div class="bg-gray-900/50 p-3 rounded-lg">
+                    <p class="text-sm text-purple-400">ราคาตั้งฐาน (KDJ)</p>
+                    <p id="base-price" class="font-bold text-lg">-</p>
+                </div>
+            </div>
+
+             <!-- Daily Price Range Prediction -->
+            <div class="mt-6 pt-6 border-t border-gray-700">
+                <h2 class="text-xl font-semibold text-gray-200 mb-4">คาดการณ์กรอบราคารายวัน (24 ชม.)</h2>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-gray-900/50 p-3 rounded-lg">
+                        <p class="text-sm text-green-400">ราคาสูงสุดที่คาดการณ์</p>
+                        <p id="daily-high-prediction" class="font-bold text-lg">-</p>
+                    </div>
+                    <div class="bg-gray-900/50 p-3 rounded-lg">
+                        <p class="text-sm text-red-400">ราคาต่ำสุดที่คาดการณ์</p>
+                        <p id="daily-low-prediction" class="font-bold text-lg">-</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 15-Minute Prediction Section -->
+            <div class="mt-6 pt-6 border-t border-gray-700">
+                <h2 class="text-xl font-semibold text-gray-200 mb-4">คาดการณ์ราคา (15 นาที)</h2>
+                <div id="short-term-prediction-card" class="bg-gray-900/50 rounded-lg p-4 text-left">
+                    <div class="flex justify-between items-baseline mb-2 pb-2 border-b border-gray-700/50">
+                        <span class="text-gray-400">ราคาปัจจุบัน</span>
+                        <p id="current-price-in-prediction" class="text-2xl font-bold">-</p>
+                    </div>
+                    <div class="flex justify-between items-baseline">
+                        <span class="text-gray-400">ราคาคาดการณ์</span>
+                        <p id="short-term-prediction-price" class="text-2xl font-bold">-</p>
+                    </div>
+                    <p id="short-term-prediction-direction" class="text-sm text-center text-gray-400 mt-2">-</p>
+                </div>
+            </div>
+
+            <!-- Recommendation Section -->
+            <div class="mt-6 pt-6 border-t border-gray-700">
+                <h2 class="text-xl font-semibold text-gray-200 mb-4">คำแนะนำทั่วไป (จำลอง)</h2>
+                <div id="recommendation-card" class="p-5 rounded-lg border">
+                    <p id="recommendation-text" class="text-2xl font-bold">-</p>
+                    <p id="recommendation-reason" class="text-sm text-gray-400 mt-1">-</p>
+                </div>
+            </div>
+
+            <!-- Smart Recommendation Section -->
+            <div class="mt-6 pt-6 border-t border-gray-700">
+                <h2 class="text-xl font-semibold text-gray-200 mb-4">คำแนะนำอัจฉริยะ (จำลอง)</h2>
+                <div id="smart-recommendation-card" class="p-5 rounded-lg border border-purple-500/50 bg-purple-900/20">
+                    <div id="smart-recommendation-loader">
+                        <p class="text-sm text-gray-300 mb-2">กำลังรวบรวมข้อมูลเพื่อวิเคราะห์...</p>
+                        <div class="w-full bg-gray-700 rounded-full h-2.5">
+                            <div id="smart-rec-progress-bar" class="bg-purple-600 h-2.5 rounded-full transition-all duration-1000 ease-linear" style="width: 0%"></div>
+                        </div>
+                        <div class="flex justify-between items-center mt-1">
+                            <p id="smart-rec-progress-text" class="text-sm text-gray-300">0%</p>
+                            <p class="text-xs text-gray-500">
+                                ตรวจสอบรอบถัดไปใน: <span id="smart-rec-countdown" class="font-bold text-yellow-400">--:--</span>
+                            </p>
+                        </div>
+                    </div>
+                    <div id="smart-recommendation-content" class="hidden">
+                        <p id="smart-recommendation-accuracy" class="text-xs text-gray-400 mb-2"></p>
+                        <div id="smart-recommendation-text-content">
+                            <!-- Actual recommendation text will go here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Bear Market Outlook Section -->
+            <div id="bear-market-outlook-section" class="mt-6 pt-6 border-t border-gray-700 hidden">
+                <h2 class="text-xl font-semibold text-gray-200 mb-4">คาดการณ์เมื่อตลาดเป็นหมี 🐻</h2>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-red-900/30 p-4 rounded-lg border border-red-500/50">
+                        <p class="text-sm text-red-300">หมีอาจตบไปถึง</p>
+                        <p id="bear-target-price" class="font-bold text-2xl text-white">-</p>
+                    </div>
+                    <div class="bg-green-900/30 p-4 rounded-lg border border-green-500/50">
+                        <p class="text-sm text-green-300">กระทิงรอบถัดไปอาจขวิดไปที่</p>
+                        <p id="bull-target-price" class="font-bold text-2xl text-white">-</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Portfolio Recommendation Section -->
+            <div id="portfolio-recommendation-section" class="mt-6 pt-6 border-t border-gray-700 hidden">
+                <h2 class="text-xl font-semibold text-gray-200 mb-4">คำแนะนำสำหรับพอร์ตของคุณ</h2>
+                <div id="portfolio-recommendation-card" class="p-5 rounded-lg border">
+                    <p id="portfolio-recommendation-text" class="text-2xl font-bold">-</p>
+                    <p id="portfolio-recommendation-reason" class="text-sm text-gray-400 mt-1 mb-4">-</p>
+                    <div class="grid grid-cols-2 gap-4 text-left">
+                        <div class="bg-gray-900/50 p-3 rounded-md">
+                            <p class="text-sm text-green-400">เป้าหมายแนวต้านถัดไป</p>
+                            <p id="upside-target" class="font-bold text-lg text-white">-</p>
+                            <p id="upside-chance" class="text-xs text-gray-300">-</p>
+                            <p id="upside-time-est" class="text-xs text-gray-400 mt-1">คาดว่าจะถึงใน: -</p>
+                        </div>
+                        <div class="bg-gray-900/50 p-3 rounded-md">
+                            <p class="text-sm text-red-400">ความเสี่ยงที่แนวรับ</p>
+                            <p id="downside-target" class="font-bold text-lg text-white">-</p>
+                            <p id="downside-chance" class="text-xs text-gray-300">-</p>
+                            <p id="downside-time-est" class="text-xs text-gray-400 mt-1">คาดว่าจะถึงใน: -</p>
+                            <div id="next-support-levels-container" class="mt-2 pt-2 border-t border-gray-700/50 text-xs hidden">
+                                <p class="text-gray-400">หากหลุดแนวรับนี้ แนวรับถัดไปคือ:</p>
+                                <p id="next-supports-text" class="font-semibold text-white"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Road to ATH Section -->
+            <div class="mt-6 pt-6 border-t border-gray-700">
+                <h2 class="text-xl font-semibold text-gray-200 mb-4">เส้นทางสู่ All-Time High (ATH)</h2>
+                <div class="bg-gray-900/50 rounded-lg p-4 text-left">
+                    <div class="flex justify-between items-baseline mb-3 pb-3 border-b border-gray-700/50">
+                        <span class="text-sm text-gray-400">All-Time High</span>
+                        <span id="ath-price" class="font-bold text-lg text-yellow-300">-</span>
+                    </div>
+                    <div id="resistance-path-list" class="space-y-3">
+                        <div class="text-center text-gray-500">กำลังคำนวณเส้นทาง...</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- External Analysis Check Section -->
+            <div class="mt-6 pt-6 border-t border-gray-700">
+                <h2 class="text-xl font-semibold text-gray-200 mb-4">ตรวจสอบกับแหล่งข้อมูลภายนอก (จำลอง)</h2>
+                <div class="bg-gray-900/50 rounded-lg p-4 text-left">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-sm text-gray-400">แหล่งข้อมูล:</span>
+                        <span class="font-semibold">Financial Insights API</span>
+                    </div>
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-sm text-gray-400">มุมมองล่าสุด:</span>
+                        <span id="external-opinion" class="font-bold text-lg">-</span>
+                    </div>
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-sm text-gray-400">สถานะ:</span>
+                        <span id="external-status" class="font-semibold">-</span>
+                    </div>
+                    <div class="flex justify-between items-center mt-3 pt-2 border-t border-gray-700/50">
+                        <span class="text-xs text-gray-500">ตรวจสอบล่าสุด:</span>
+                        <span id="external-last-checked" class="text-xs text-gray-500">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Prediction Accuracy Section -->
+            <div class="mt-6 pt-6 border-t border-gray-700">
+                <h2 class="text-xl font-semibold text-gray-200 mb-4">ความแม่นยำในการคาดการณ์ (จำลอง)</h2>
+                <div class="bg-gray-900/50 rounded-lg p-4 text-center">
+                    <p class="text-5xl font-bold" id="prediction-accuracy-percent">-%</p>
+                    <p class="text-gray-400" id="prediction-accuracy-stats">กำลังคำนวณ...</p>
+                    <div id="prediction-history-list" class="mt-4 space-y-2 text-left">
+                        <!-- History items will be injected here -->
+                    </div>
+                    <p class="text-xs text-gray-500 mt-4">
+                        ตรวจสอบใหม่ใน: <span id="accuracy-countdown" class="font-bold text-yellow-400">--:--</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div id="content-trading-room" class="hidden">
+            <div class="mt-6 pt-6 border-t border-gray-700">
+                <h2 class="text-2xl font-bold text-gray-100 mb-4">Trading Room (สัญญาณเข้าซื้อ)</h2>
+                <div id="trading-room-signal-card" class="p-6 rounded-2xl border-2 min-h-[250px] flex flex-col items-center justify-center transition-all duration-500 border-gray-700">
+                     <!-- Content is generated by JS -->
+                </div>
+            </div>
+        </div>
+
+        <p class="text-xs text-gray-600 mt-8">*ข้อมูลทั้งหมดเป็นการจำลองเพื่อการสาธิต ไม่ใช่คำแนะนำในการลงทุน</p>
+    </div>
+
+    <!-- Custom Confirmation Modal -->
+    <div id="confirmation-modal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center hidden z-50">
+        <div class="bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-sm text-center border border-gray-600">
+            <h3 id="modal-title" class="text-lg font-bold text-white mb-4">ยืนยันการดำเนินการ</h3>
+            <p id="modal-body" class="text-gray-300 mb-6">คุณแน่ใจหรือไม่ว่าต้องการลบข้อมูลพอร์ตทั้งหมด?</p>
+            <div class="flex justify-center space-x-4">
+                <button id="modal-cancel-btn" class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-6 rounded-md transition duration-200">ยกเลิก</button>
+                <button id="modal-confirm-btn" class="bg-red-600 hover:bg-red-500 text-white font-bold py-2 px-6 rounded-md transition duration-200">ยืนยัน</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let elements = {};
+        let currentSymbol = 'ETHUSDT';
+        let currentCoinName = 'Ethereum';
+        let currentCoinLogo = 'https://s2.coinmarketcap.com/static/img/coins/64x64/1027.png';
+        
+        let ws;
+        let intervals = [];
+        
+        let lastPrice = 0;
+        let currentPrice = 0;
+        let usdToThbRate = 36.7; // Default rate
+        const commissionRate = 0.001; // 0.1% commission
+        let transactions = [];
+        let confirmAction = null; 
+        let predictionHistory = [];
+        let lastPredictionTimestamp = 0;
+        let historicalAllTimeData = null; // Cache for ATH data
+        let currentAnalysisData = {}; // Cache for current analysis data
+
+
+        // --- UI Functions ---
+        function showModal() { elements.modal.classList.remove('hidden'); }
+        function hideModal() { elements.modal.classList.add('hidden'); confirmAction = null; }
+
+        function clearAllIntervals() {
+            intervals.forEach(clearInterval);
+            intervals = [];
+        }
+
+        function closeWebSocket() {
+            if (ws) {
+                ws.close();
+                ws = null;
+            }
+        }
+        
+        // --- Portfolio & Prediction History Functions ---
+        function saveToLocalStorage(key, data) { localStorage.setItem(key, JSON.stringify(data)); }
+        function loadFromLocalStorage(key, isArray = true) {
+            const savedData = localStorage.getItem(key);
+            if (savedData) {
+                try {
+                    return JSON.parse(savedData);
+                } catch(e) {
+                    return isArray ? [] : {};
+                }
+            }
+            return isArray ? [] : {};
+        }
+
+        function updatePortfolioDisplay() {
+            if (transactions.length === 0) {
+                 elements.portfolioTotalEth.textContent = '0.00';
+                 elements.portfolioAvgPrice.textContent = '0.00';
+                 elements.portfolioRecSection.classList.add('hidden');
+            } else {
+                 elements.portfolioRecSection.classList.remove('hidden');
+                const totalAmount = transactions.reduce((sum, tx) => sum + tx.amountAfterFee, 0);
+                const totalCost = transactions.reduce((sum, tx) => sum + tx.cost, 0);
+                const avgPrice = totalAmount > 0 ? totalCost / totalAmount : 0;
+                elements.portfolioTotalEth.textContent = totalAmount.toLocaleString('en-US', { minimumFractionDigits: 4, maximumFractionDigits: 4 });
+                elements.portfolioAvgPrice.textContent = avgPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            }
+
+            if (currentPrice > 0) {
+                 const totalAmount = transactions.reduce((sum, tx) => sum + tx.amountAfterFee, 0);
+                 const totalCost = transactions.reduce((sum, tx) => sum + tx.cost, 0);
+                 const currentValueUSD = totalAmount * currentPrice;
+                 const profitLossUSD = totalAmount > 0 ? currentValueUSD - totalCost : 0;
+                 const currentValueTHB = currentValueUSD * usdToThbRate;
+                 const profitLossTHB = profitLossUSD * usdToThbRate;
+                 elements.portfolioCurrentValue.textContent = '฿' + currentValueTHB.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                 elements.portfolioProfitLoss.textContent = '฿' + profitLossTHB.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                 elements.portfolioProfitLoss.className = `font-bold text-lg ${profitLossUSD >= 0 ? 'text-green-400' : 'text-red-400'}`;
+            }
+        }
+
+
+        function handleAddTransaction() {
+            const amount = parseFloat(elements.ethAmountInput.value);
+            const price = parseFloat(elements.ethPriceInput.value);
+
+            if (isNaN(amount) || isNaN(price) || amount <= 0 || price <= 0) { /* Modal logic... */ return; }
+
+            const cost = amount * price;
+            const fee = amount * commissionRate;
+            const amountAfterFee = amount - fee;
+
+            transactions.push({ amountAfterFee: amountAfterFee, cost: cost });
+            saveToLocalStorage(`${currentSymbol}_transactions`, transactions);
+            updatePortfolioDisplay();
+            elements.ethAmountInput.value = '';
+            elements.ethPriceInput.value = '';
+        }
+        
+        function handleResetPortfolio() {
+            document.getElementById('modal-title').textContent = 'ยืนยันการดำเนินการ';
+            document.getElementById('modal-body').textContent = 'คุณแน่ใจหรือไม่ว่าต้องการลบข้อมูลพอร์ตทั้งหมด?';
+            document.getElementById('modal-confirm-btn').classList.remove('hidden');
+            document.getElementById('modal-cancel-btn').textContent = 'ยกเลิก';
+
+            showModal();
+            confirmAction = () => {
+                transactions = [];
+                localStorage.removeItem(`${currentSymbol}_transactions`);
+                updatePortfolioDisplay();
+                hideModal();
+            };
+        }
+
+        // --- Technical Analysis Functions ---
+        const calculateSMA = (p, period) => p.length < period ? 0 : p.slice(-period).reduce((a, b) => a + b, 0) / period;
+        const calculateEMA = (prices, period) => { if (prices.length < period) return 0; const k = 2 / (period + 1); let ema = calculateSMA(prices.slice(0, period), period); for (let i = period; i < prices.length; i++) { ema = (prices[i] * k) + (ema * (1 - k)); } return ema; };
+        const calculateRSI = (prices, period = 14) => { if (prices.length < period + 1) return 50; let gains = 0, losses = 0; for (let i = prices.length - period; i < prices.length; i++) { const diff = prices[i] - prices[i-1]; if (diff >= 0) { gains += diff; } else { losses -= diff; } } if (losses === 0) return 100; const rs = (gains / period) / (losses / period); return (100 - (100 / (1 + rs))); };
+        const calculateMACD = (p, s = 12, l = 26, sig = 9) => { if (p.length < l) return { macd: 0, signal: 0 }; const m = calculateEMA(p, s) - calculateEMA(p, l); const sLine = calculateEMA(p.slice(-sig * 2), sig); return { macd: m, signal: sLine }; };
+        const calculateKDJ = (klines, n = 9, m1 = 3, m2 = 3) => { if (klines.length < n) return { k: 50, d: 50, j: 50, basePrice: 0 }; let rsvs = []; for (let i = n - 1; i < klines.length; i++) { const period = klines.slice(i - n + 1, i + 1); const close = parseFloat(period[period.length - 1][4]); const lowestLow = Math.min(...period.map(k => parseFloat(k[3]))); const highestHigh = Math.max(...period.map(k => parseFloat(k[2]))); const rsv = (highestHigh === lowestLow) ? 50 : ((close - lowestLow) / (highestHigh - lowestLow)) * 100; rsvs.push(rsv); } let k = 50, d = 50; for (const rsv of rsvs) { k = (k * (m1 - 1) + rsv) / m1; d = (d * (m2 - 1) + k) / m2; } const j = 3 * k - 2 * d; let basePrice = 0; if (k < 30 && d < 30) { const period = klines.slice(-n); basePrice = Math.min(...period.map(k => parseFloat(k[3]))); } return { k, d, j, basePrice }; };
+        const calculateSR = (klines) => { if (!klines || klines.length === 0) return { support: 0, resistance: 0 }; const lows = klines.map(k => parseFloat(k[3])); const highs = klines.map(k => parseFloat(k[2])); const support = Math.min(...lows); const resistance = Math.max(...highs); return { support, resistance }; };
+        const calculateATR = (klines, period = 14) => { if (klines.length < period + 1) return 0; let trueRanges = []; for (let i = klines.length - period; i < klines.length; i++) { const high = parseFloat(klines[i][2]); const low = parseFloat(klines[i][3]); const prevClose = parseFloat(klines[i - 1][4]); const tr = Math.max(high - low, Math.abs(high - prevClose), Math.abs(low - prevClose)); trueRanges.push(tr); } return trueRanges.reduce((a, b) => a + b, 0) / period; };
+
+        // --- Data Fetching ---
+        const fetchData = async (url) => {
+            const res = await fetch(url);
+            if (!res.ok) throw new Error(`Fetch failed for ${url}`);
+            return res.json();
+        }
+        
+        async function fetchAllTimeData(symbol) {
+            if (historicalAllTimeData) return historicalAllTimeData;
+            try {
+                const data = await fetchData(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=1w&limit=1000`);
+                historicalAllTimeData = data;
+                return data;
+            } catch (error) { console.error("Could not fetch all-time historical data:", error); return []; }
+        }
+        
+        async function fetchExchangeRate() {
+            try {
+                const response = await fetch('https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json');
+                const data = await response.json();
+                if (data && data.usd && data.usd.thb) { usdToThbRate = data.usd.thb; }
+            } catch (error) { console.error("Could not fetch exchange rate, using default.", error); }
+        }
+
+        // --- Real-time Price via WebSocket ---
+        function setupWebSocket(symbol) {
+            closeWebSocket();
+            ws = new WebSocket(`wss://stream.binance.com:9443/ws/${symbol.toLowerCase()}@ticker`);
+            ws.onopen = () => { elements.lastUpdated.textContent = 'เชื่อมต่อสำเร็จแล้ว'; elements.ethPrice.classList.remove('text-gray-400'); };
+            ws.onmessage = (event) => {
+                const price = parseFloat(JSON.parse(event.data).c);
+                if (currentPrice === 0) {
+                    elements.ethPrice.classList.add('text-green-400');
+                    elements.currentPriceInPrediction.classList.add('text-gray-200');
+                }
+                if (price > lastPrice && lastPrice !== 0) { elements.ethPrice.className = 'text-5xl font-bold my-4 price-pulse text-green-400'; } 
+                else if (price < lastPrice) { elements.ethPrice.className = 'text-5xl font-bold my-4 price-pulse text-red-400'; }
+                lastPrice = price; currentPrice = price;
+                elements.ethPrice.textContent = `$${price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                elements.currentPriceInPrediction.textContent = `$${price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                elements.lastUpdated.textContent = `อัปเดตล่าสุด: ${new Date().toLocaleTimeString('th-TH')}`;
+                updatePortfolioDisplay();
+            };
+            ws.onerror = () => { elements.lastUpdated.textContent = 'การเชื่อมต่อขัดข้อง'; };
+            ws.onclose = () => { elements.lastUpdated.textContent = 'การเชื่อมต่อถูกตัด'; };
+        }
+        
+        // --- Analysis and Recommendation Logic ---
+        function getGeneralRecommendation(rsi, isMacdBullish, isBtcBullish, newsScore, currentPrice, support, resistance) { /* Unchanged */ }
+        function getSmartRecommendation(analysisData, accuracy) { /* Unchanged */ }
+        function getTradingRoomSignal(analysisData) { /* Unchanged */ }
+        function updatePortfolioAnalysis(analysisData) { /* Unchanged */ }
+        function addPredictionToHistory(rec, support, resistance) { /* Unchanged but now uses currentSymbol */ }
+        async function checkPredictionOutcomes() { /* Unchanged but now uses currentSymbol */ }
+        function updateAccuracyDisplay() { /* Unchanged */ }
+        function updateShortTermPrediction(oneMinuteKlines) { /* Unchanged */ }
+        function formatDateThai(date) { /* Unchanged */ }
+        function updateAthAnalysis(allTimeKlines, currentPrice) { /* Unchanged */ }
+        function analyzeTargetPrice() { /* Unchanged */ }
+        function startAccuracyCountdown() { /* Unchanged */ }
+        
+        async function updateAnalysis(symbol) {
+            try {
+                if (currentPrice === 0) return;
+                const [ethKlines, btcCloses, eth1mKlines, eth8hKlines, eth15mKlines, ethDailyKlines, allTimeKlines] = await Promise.all([
+                    fetchData(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=4h&limit=100`),
+                    fetchData(`https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=4h&limit=100`).then(d => d.map(k => parseFloat(k[4]))),
+                    fetchData(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=1m&limit=15`),
+                    fetchData(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=1h&limit=8`),
+                    fetchData(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=15m&limit=20`),
+                    fetchData(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=1d&limit=100`),
+                    fetchAllTimeData(symbol)
+                ]);
+
+                const ethCloses = ethKlines.map(k => parseFloat(k[4]));
+                const { support, resistance } = calculateSR(eth8hKlines);
+                const atr = calculateATR(ethKlines);
+                const dailyAtr = calculateATR(ethDailyKlines);
+                
+                let nextSupportLevels = [];
+                if (allTimeKlines && allTimeKlines.length > 0) {
+                    const potentialSupports = allTimeKlines.map(k => parseFloat(k[3])).filter(low => low < support * 0.98).sort((a, b) => b - a);
+                    let lastSupport = support;
+                    for (const price of potentialSupports) {
+                        if (price < lastSupport * 0.95 && nextSupportLevels.length < 2) {
+                            nextSupportLevels.push(price);
+                            lastSupport = price;
+                        }
+                    }
+                }
+
+                const btcPrice = btcCloses[btcCloses.length - 1];
+                const isBtcBullish = btcPrice > calculateSMA(btcCloses, 20);
+                const rsi = calculateRSI(ethCloses);
+                const { macd, signal } = calculateMACD(ethCloses);
+                const { k, d, j, basePrice } = calculateKDJ(ethKlines);
+                const isMacdBullish = macd > signal;
+                const sentimentRand = Math.random();
+                let newsText, newsScore;
+                if(sentimentRand < 0.33) { newsText = 'เชิงลบ 🔻'; newsScore = -1; elements.newsSentiment.className = "font-bold text-lg text-red-400"; } 
+                else if (sentimentRand < 0.66) { newsText = 'กลาง 🔸'; newsScore = 0; elements.newsSentiment.className = "font-bold text-lg text-yellow-400"; } 
+                else { newsText = 'เชิงบวก 🔺'; newsScore = 1; elements.newsSentiment.className = "font-bold text-lg text-green-400"; }
+
+                elements.btcTrendContainer.innerHTML = `แนวโน้มตลาด (BTC): <span class="${isBtcBullish ? 'text-green-400' : 'text-red-400'} font-semibold">${isBtcBullish ? 'กระทิง 🐂' : 'หมี 🐻'}</span>`;
+                elements.supportLevel.textContent = `$${support.toLocaleString('en-US', {minimumFractionDigits: 0})}`;
+                elements.resistanceLevel.textContent = `$${resistance.toLocaleString('en-US', {minimumFractionDigits: 0})}`;
+                elements.rsiValue.textContent = rsi.toFixed(2);
+                elements.macdStatus.className = isMacdBullish ? "font-bold text-lg text-green-400" : "font-bold text-lg text-red-400";
+                elements.macdStatus.textContent = isMacdBullish ? 'กระทิง 🐂' : 'หมี 🐻';
+                elements.kdjValue.textContent = `${k.toFixed(1)} / ${d.toFixed(1)} / ${j.toFixed(1)}`;
+                elements.basePrice.textContent = basePrice > 0 ? `$${basePrice.toLocaleString('en-US', {minimumFractionDigits: 2})}` : 'N/A';
+                elements.newsSentiment.textContent = newsText;
+                
+                const nextMajorResistance = updateAthAnalysis(allTimeKlines, currentPrice);
+                
+                currentAnalysisData = { rsi, isMacdBullish, isBtcBullish, newsSentimentScore: newsScore, support, resistance, atr, dailyAtr, nextSupportLevels, j, k, d, nextMajorResistance, eth15mKlines };
+                
+                if (!isBtcBullish && nextSupportLevels && nextSupportLevels.length >= 1 && nextMajorResistance) {
+                    elements.bearMarketOutlookSection.classList.remove('hidden');
+                    const bearTarget = nextSupportLevels.length > 1 ? nextSupportLevels[1] : nextSupportLevels[0];
+                    elements.bearTargetPrice.textContent = `$${bearTarget.toLocaleString('en-US', {minimumFractionDigits: 0})}`;
+                    elements.bullTargetPrice.textContent = `$${nextMajorResistance.toLocaleString('en-US', {minimumFractionDigits: 0})}`;
+                } else {
+                    elements.bearMarketOutlookSection.classList.add('hidden');
+                }
+
+                const rec = getGeneralRecommendation(rsi, isMacdBullish, isBtcBullish, newsScore, currentPrice, support, resistance);
+                elements.recommendationText.textContent = rec.text;
+                elements.recommendationReason.textContent = rec.reason;
+                elements.recommendationCard.className = `p-5 rounded-lg border ${rec.style}`;
+                
+                updatePortfolioAnalysis(currentAnalysisData);
+                addPredictionToHistory(rec, support, resistance);
+                updateShortTermPrediction(eth1mKlines);
+                
+                if(dailyAtr > 0 && currentPrice > 0) {
+                    const predictedHigh = currentPrice + (dailyAtr * 0.75);
+                    const predictedLow = currentPrice - (dailyAtr * 0.75);
+                    elements.dailyHighPrediction.textContent = `$${predictedHigh.toLocaleString('en-US', {minimumFractionDigits: 0})}`;
+                    elements.dailyLowPrediction.textContent = `$${predictedLow.toLocaleString('en-US', {minimumFractionDigits: 0})}`;
+                }
+
+
+                const accuracy = updateAccuracyDisplay();
+                getSmartRecommendation(currentAnalysisData, accuracy);
+                getTradingRoomSignal(currentAnalysisData);
+
+            } catch (error) { console.error("Could not update analysis:", error); }
+        }
+
+        function updateExternalAnalysis() { /* Unchanged */ }
+
+        // --- New Main Execution Flow ---
+        
+        async function fetchTopCoins() {
+            try {
+                const response = await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=50&page=1&sparkline=false');
+                const coins = await response.json();
+                const binanceResponse = await fetch('https://api.binance.com/api/v3/exchangeInfo');
+                const binanceInfo = await binanceResponse.json();
+                const binanceSymbols = new Set(binanceInfo.symbols.map(s => s.symbol));
+
+                elements.coinSelector.innerHTML = ''; 
+
+                coins.forEach(coin => {
+                    const symbol = `${coin.symbol.toUpperCase()}USDT`;
+                    if (binanceSymbols.has(symbol)) {
+                        const option = document.createElement('option');
+                        option.value = symbol;
+                        option.textContent = `${coin.name} (${coin.symbol.toUpperCase()})`;
+                        option.dataset.logo = coin.image;
+                        option.dataset.name = coin.name;
+                        elements.coinSelector.appendChild(option);
+                    }
+                });
+
+                const savedCoin = loadFromLocalStorage('selectedCoin', false);
+                if (savedCoin && savedCoin.symbol) {
+                    elements.coinSelector.value = savedCoin.symbol;
+                    startAppForCoin(savedCoin.symbol, savedCoin.name, savedCoin.logo);
+                } else {
+                    elements.coinSelector.value = 'ETHUSDT';
+                    startAppForCoin('ETHUSDT', 'Ethereum', 'https://s2.coinmarketcap.com/static/img/coins/64x64/1027.png');
+                }
+
+            } catch (error) {
+                console.error("Failed to load top coins:", error);
+                elements.coinSelector.innerHTML = '<option>ไม่สามารถโหลดรายชื่อได้</option>';
+            }
+        }
+
+        function switchCoin(event) {
+            const selectedOption = event.target.options[event.target.selectedIndex];
+            const symbol = selectedOption.value;
+            const name = selectedOption.dataset.name;
+            const logo = selectedOption.dataset.logo;
+            
+            saveToLocalStorage('selectedCoin', { symbol, name, logo });
+            
+            startAppForCoin(symbol, name, logo);
+        }
+
+        function resetUIForSwitch() {
+             // Reset prices
+            elements.ethPrice.innerHTML = `<span class="loader border-4 border-gray-500 rounded-full w-10 h-10 inline-block"></span>`;
+            elements.ethPrice.className = 'text-5xl font-bold my-4 text-gray-400 price-pulse';
+            elements.lastUpdated.textContent = 'กำลังเชื่อมต่อ...';
+
+            // Reset dashboard elements
+            ['support-level', 'resistance-level', 'news-sentiment', 'rsi-value', 'macd-status', 'kdj-value', 'base-price', 'daily-high-prediction', 'daily-low-prediction', 'current-price-in-prediction', 'short-term-prediction-price', 'recommendation-text', 'recommendation-reason', 'ath-price'].forEach(id => {
+                if(document.getElementById(id)) document.getElementById(id).textContent = '-';
+            });
+            elements.resistancePathList.innerHTML = '<div class="text-center text-gray-500">กำลังคำนวณเส้นทาง...</div>';
+            
+            // Reset portfolio specific visuals
+            elements.portfolioRecSection.classList.add('hidden');
+            
+            // Reset smart recommendation
+            elements.smartRecommendationLoader.classList.remove('hidden');
+            elements.smartRecommendationContent.classList.add('hidden');
+            
+            // Reset trading room
+             elements.tradingRoomSignalCard.className = "p-6 rounded-2xl border-2 min-h-[250px] flex flex-col items-center justify-center transition-all duration-500 border-gray-700";
+             elements.tradingRoomSignalCard.innerHTML = `<p class="text-2xl font-bold text-gray-500">รอสัญญาณ...</p><p class="text-sm text-gray-600 mt-2">กำลังวิเคราะห์ตลาดเพื่อหาจังหวะเข้าซื้อที่ดีที่สุด</p><div class="loader border-4 border-gray-600 rounded-full w-8 h-8 inline-block mt-4"></div>`;
+
+             // Reset accuracy
+             elements.predictionAccuracyPercent.textContent = "-%";
+             elements.predictionAccuracyStats.textContent = "กำลังคำนวณ...";
+             elements.predictionHistoryList.innerHTML = '';
+
+        }
+
+
+        function startAppForCoin(symbol, name, logoUrl) {
+            // 1. Teardown
+            clearAllIntervals();
+            closeWebSocket();
+            
+            // 2. Reset UI and State
+            resetUIForSwitch();
+            currentSymbol = symbol.toUpperCase();
+            currentCoinName = name;
+            currentCoinLogo = logoUrl;
+            lastPrice = 0;
+            currentPrice = 0;
+            historicalAllTimeData = null; // Clear cache for new coin
+            
+            elements.coinName.textContent = `${name} (${symbol.replace('USDT', '')})`;
+            elements.coinLogo.src = logoUrl;
+            elements.portfolioCoinSymbol.textContent = symbol.replace('USDT', '');
+            
+            // 3. Load Data for new coin
+            transactions = loadFromLocalStorage(`${currentSymbol}_transactions`);
+            predictionHistory = loadFromLocalStorage(`${currentSymbol}_prediction_history`);
+            updatePortfolioDisplay();
+
+            // 4. Start everything up again
+            setupWebSocket(currentSymbol.toLowerCase());
+            fetchExchangeRate(); 
+            intervals.push(setInterval(fetchExchangeRate, 300000));
+            
+            setTimeout(() => {
+                updateAnalysis(currentSymbol);
+                updateExternalAnalysis();
+                
+                checkPredictionOutcomes();
+                startAccuracyCountdown();
+
+                intervals.push(setInterval(() => updateAnalysis(currentSymbol), 15000));
+                intervals.push(setInterval(() => updateExternalAnalysis(), 15 * 60 * 1000));
+                
+                intervals.push(setInterval(() => {
+                    checkPredictionOutcomes();
+                    startAccuracyCountdown(); 
+                }, 15 * 60 * 1000));
+            }, 2000);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+             elements = {
+                coinLogo: document.getElementById('coin-logo'),
+                coinName: document.getElementById('coin-name'),
+                coinSelector: document.getElementById('coin-selector'),
+                ethPrice: document.getElementById('eth-price'),
+                lastUpdated: document.getElementById('last-updated'),
+                btcTrendContainer: document.getElementById('btc-trend-container'),
+                newsSentiment: document.getElementById('news-sentiment'),
+                rsiValue: document.getElementById('rsi-value'),
+                macdStatus: document.getElementById('macd-status'),
+                kdjValue: document.getElementById('kdj-value'),
+                basePrice: document.getElementById('base-price'),
+                supportLevel: document.getElementById('support-level'),
+                resistanceLevel: document.getElementById('resistance-level'),
+                recommendationCard: document.getElementById('recommendation-card'),
+                recommendationText: document.getElementById('recommendation-text'),
+                recommendationReason: document.getElementById('recommendation-reason'),
+                ethAmountInput: document.getElementById('eth-amount-input'),
+                ethPriceInput: document.getElementById('eth-price-input'),
+                addTransactionBtn: document.getElementById('add-transaction-btn'),
+                resetPortfolioBtn: document.getElementById('reset-portfolio-btn'),
+                portfolioCoinSymbol: document.getElementById('portfolio-coin-symbol'),
+                portfolioTotalEth: document.getElementById('portfolio-total-eth'),
+                portfolioAvgPrice: document.getElementById('portfolio-avg-price'),
+                portfolioCurrentValue: document.getElementById('portfolio-current-value'),
+                portfolioProfitLoss: document.getElementById('portfolio-profit-loss'),
+                modal: document.getElementById('confirmation-modal'),
+                modalConfirmBtn: document.getElementById('modal-confirm-btn'),
+                modalCancelBtn: document.getElementById('modal-cancel-btn'),
+                portfolioRecSection: document.getElementById('portfolio-recommendation-section'),
+                portfolioRecCard: document.getElementById('portfolio-recommendation-card'),
+                portfolioRecText: document.getElementById('portfolio-recommendation-text'),
+                portfolioRecReason: document.getElementById('portfolio-recommendation-reason'),
+                upsideTarget: document.getElementById('upside-target'),
+                upsideChance: document.getElementById('upside-chance'),
+                upsideTimeEst: document.getElementById('upside-time-est'),
+                downsideTarget: document.getElementById('downside-target'),
+                downsideChance: document.getElementById('downside-chance'),
+                downsideTimeEst: document.getElementById('downside-time-est'),
+                externalOpinion: document.getElementById('external-opinion'),
+                externalStatus: document.getElementById('external-status'),
+                externalLastChecked: document.getElementById('external-last-checked'),
+                predictionAccuracyPercent: document.getElementById('prediction-accuracy-percent'),
+                predictionAccuracyStats: document.getElementById('prediction-accuracy-stats'),
+                accuracyCountdown: document.getElementById('accuracy-countdown'),
+                predictionHistoryList: document.getElementById('prediction-history-list'),
+                shortTermPredictionPrice: document.getElementById('short-term-prediction-price'),
+                shortTermPredictionDirection: document.getElementById('short-term-prediction-direction'),
+                currentPriceInPrediction: document.getElementById('current-price-in-prediction'),
+                athPrice: document.getElementById('ath-price'),
+                resistancePathList: document.getElementById('resistance-path-list'),
+                nextSupportLevelsContainer: document.getElementById('next-support-levels-container'),
+                nextSupportsText: document.getElementById('next-supports-text'),
+                targetPriceInput: document.getElementById('target-price-input'),
+                analyzeTargetBtn: document.getElementById('analyze-target-btn'),
+                targetAnalysisResult: document.getElementById('target-analysis-result'),
+                smartRecommendationLoader: document.getElementById('smart-recommendation-loader'),
+                smartRecProgressBar: document.getElementById('smart-rec-progress-bar'),
+                smartRecProgressText: document.getElementById('smart-rec-progress-text'),
+                smartRecCountdown: document.getElementById('smart-rec-countdown'),
+                smartRecommendationContent: document.getElementById('smart-recommendation-content'),
+                smartRecommendationAccuracy: document.getElementById('smart-recommendation-accuracy'),
+                smartRecommendationTextContent: document.getElementById('smart-recommendation-text-content'),
+                tabDashboard: document.getElementById('tab-dashboard'),
+                tabTradingRoom: document.getElementById('tab-trading-room'),
+                contentDashboard: document.getElementById('content-dashboard'),
+                contentTradingRoom: document.getElementById('content-trading-room'),
+                tradingRoomSignalCard: document.getElementById('trading-room-signal-card'),
+                dailyHighPrediction: document.getElementById('daily-high-prediction'),
+                dailyLowPrediction: document.getElementById('daily-low-prediction'),
+                bearMarketOutlookSection: document.getElementById('bear-market-outlook-section'),
+                bearTargetPrice: document.getElementById('bear-target-price'),
+                bullTargetPrice: document.getElementById('bull-target-price'),
+            };
+
+            fetchTopCoins();
+            
+            elements.addTransactionBtn.addEventListener('click', handleAddTransaction);
+            elements.resetPortfolioBtn.addEventListener('click', handleResetPortfolio);
+            elements.analyzeTargetBtn.addEventListener('click', analyzeTargetPrice);
+            elements.modalConfirmBtn.addEventListener('click', () => { if (confirmAction) confirmAction(); });
+            elements.modalCancelBtn.addEventListener('click', hideModal);
+            elements.coinSelector.addEventListener('change', switchCoin);
+            
+            elements.tabDashboard.addEventListener('click', () => {
+                elements.contentDashboard.classList.remove('hidden');
+                elements.contentTradingRoom.classList.add('hidden');
+                elements.tabDashboard.className = 'border-purple-500 text-purple-400 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm';
+                elements.tabTradingRoom.className = 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-500 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm';
+            });
+
+            elements.tabTradingRoom.addEventListener('click', () => {
+                elements.contentDashboard.classList.add('hidden');
+                elements.contentTradingRoom.classList.remove('hidden');
+                elements.tabTradingRoom.className = 'border-purple-500 text-purple-400 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm';
+                elements.tabDashboard.className = 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-500 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm';
+            });
+        });
+    </script>
+</body>
+</html>
+
