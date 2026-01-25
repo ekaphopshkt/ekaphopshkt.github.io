@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>รายการเมนูอาหาร - Food Menu</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Kanit', sans-serif;
+            background-color: #f8fafc;
+        }
+        .category-card {
+            background: white;
+            border-radius: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+        }
+        .menu-item {
+            border-bottom: 1px solid #f1f5f9;
+            transition: background-color 0.2s;
+        }
+        .menu-item:hover {
+            background-color: #f8fafc;
+        }
+        .set-card {
+            background: linear-gradient(145deg, #ffffff, #f1f5f9);
+            border-left: 5px solid #f59e0b;
+        }
+    </style>
+</head>
+<body class="pb-12 text-gray-800">
+
+    <!-- Header -->
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-5xl mx-auto px-4 py-6 flex flex-col items-center">
+            <h1 class="text-3xl font-bold text-gray-900">รายการเมนูอาหาร</h1>
+            <div class="w-16 h-1 bg-orange-500 mt-2 rounded-full"></div>
+            <p class="text-gray-500 mt-3 italic">คัดสรรวัตถุดิบคุณภาพ ปรุงสดใหม่ทุกจาน</p>
+        </div>
+    </header>
+
+    <main class="max-w-5xl mx-auto px-4 mt-8 space-y-10">
+
+        <!-- 🍱 ชุดเซตอาหาร -->
+        <section>
+            <h2 class="text-2xl font-semibold mb-6 flex items-center gap-2">
+                <span class="text-3xl text-orange-500">🍱</span> ชุดเซตอาหาร (Set Menus)
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="set-card p-6 rounded-2xl shadow-md border border-gray-100">
+                    <span class="text-orange-600 font-bold text-2xl">100.-</span>
+                    <h3 class="font-semibold text-xl mt-1">ชุดประหยัด</h3>
+                    <p class="text-sm text-gray-600 mt-3 leading-relaxed">ข้าวสวย + กับข้าว (หมู, ไก่ หรือ ผัก) 2 รายการ</p>
+                </div>
+                <div class="set-card p-6 rounded-2xl shadow-md border border-gray-100" style="border-left-color: #ef4444;">
+                    <span class="text-red-600 font-bold text-2xl">135.-</span>
+                    <h3 class="font-semibold text-xl mt-1">ชุดอิ่มคุ้ม</h3>
+                    <p class="text-sm text-gray-600 mt-3 leading-relaxed">ข้าวสวย + กับข้าว 1 รายการ + ขนมหวาน 1 รายการ</p>
+                </div>
+                <div class="set-card p-6 rounded-2xl shadow-md border border-gray-100" style="border-left-color: #8b5cf6;">
+                    <span class="text-purple-600 font-bold text-2xl">175.-</span>
+                    <h3 class="font-semibold text-xl mt-1">ชุดจัดเต็ม</h3>
+                    <p class="text-sm text-gray-600 mt-3 leading-relaxed">ข้าวสวย + กับข้าว 2 รายการ + ขนมหวาน 1 รายการ</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 🍛 เมนูข้าวราดและกับข้าว -->
+        <section>
+            <h2 class="text-2xl font-semibold mb-6 flex items-center gap-2">
+                <span class="text-3xl text-orange-500">🍛</span> เมนูข้าวราดและข้าวผัด
+            </h2>
+            
+            <div class="category-card p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-1">
+                    <!-- รายการอาหารข้าว -->
+                    <div class="menu-item py-2">● ข้าวคลุกกระเพราไก่ / หมูสับ</div>
+                    <div class="menu-item py-2">● ข้าวราดผัดกระเพรา (ไก่/หมูสับ/หมูชิ้น/หมูกรอบ)</div>
+                    <div class="menu-item py-2">● ข้าวราดผัดกระเพรา (เนื้อสับ/ทะเล)</div>
+                    <div class="menu-item py-2">● ข้าวราดคั่วกลิ้ง (ไก่/หมู)</div>
+                    <div class="menu-item py-2">● ข้าวราดคะน้าผัด (หมูสับ/หมูชิ้น/ไก่/หมูกรอบ)</div>
+                    <div class="menu-item py-2">● ข้าวราดผักบุ้งผัด (หมูสับ/หมูชิ้น/ไก่)</div>
+                    <div class="menu-item py-2">● ข้าวราดถั่วฝักยาวผัด (หมูสับ/หมูชิ้น/ไก่)</div>
+                    <div class="menu-item py-2">● ข้าวราดผักรวมผัด (หมูสับ/หมูชิ้น/ไก่)</div>
+                    <div class="menu-item py-2">● ข้าวราดกะหล่ำผัด (หมูสับ/หมูชิ้น/ไก่)</div>
+                    <div class="menu-item py-2">● ข้าวราดถั่วงอกผัด (หมูสับ/หมูชิ้น/ไก่)</div>
+                    <div class="menu-item py-2">● ข้าวราดพริกหยวกผัด (หมูสับ/หมูชิ้น/ไก่)</div>
+                    <div class="menu-item py-2">● ข้าวราดคื่นฉ่ายผัด (หมูสับ/หมูชิ้น/ไก่/เนื้อ/ทะเล)</div>
+                    <div class="menu-item py-2">● ข้าวราดปลากระพงผัดใบคื่นฉ่าย</div>
+                    <div class="menu-item py-2">● ข้าวราดผัดพริกแกง (หมูสับ/หมูชิ้น/ไก่/ทะเล)</div>
+                    <div class="menu-item py-2">● ข้าวราดผัดพริกแกงเขียวหวานแห้งเนื้อ</div>
+                    <div class="menu-item py-2">● ข้าวราดกระเทียมพริกไทย (หมู/ไก่)</div>
+                    <div class="menu-item py-2">● ข้าวผัด (หมู/ไก่/ทะเล/แหนม/หนำเลี๊ยบ/อเมริกัน)</div>
+                    <div class="menu-item py-2">● ข้าวผัดน้ำพริกตาแดง ไข่ดาวกรอบ</div>
+                    <div class="menu-item py-2">● ข้าวผัดน้ำพริกกะปิ ปลาทู ชะอมทอด</div>
+                    <div class="menu-item py-2">● ข้าวผัดน้ำพริกสูตรชิมไทย</div>
+                    <div class="menu-item py-2">● ข้าวผัดต้มยำทะเล</div>
+                    <div class="menu-item py-2">● ข้าวผัดแกงเขียวหวานหมูกรอบ</div>
+                    <div class="menu-item py-2">● ข้าวผัดหมูแดด / ปลาอินทรีย์แดดเดียว ไข่ดาวกรอบ</div>
+                    <div class="menu-item py-2">● ข้าวราดผัดพริกไทยดำ (หมู/ไก่/เนื้อ/ทะเล)</div>
+                    <div class="menu-item py-2">● ข้าวราดไก่ผัดเม็ดมะม่วง</div>
+                    <div class="menu-item py-2">● ข้าวราดผัดเผ็ดไก่สูตรชิมไทย</div>
+                    <div class="menu-item py-2">● ข้าวราดผัดเผ็ดปลาดุกสมุนไพร</div>
+                    <div class="menu-item py-2">● ข้าวราดเต้าหู้ทอดผัดพริกขี้หนูสมุนไพร</div>
+                    <div class="menu-item py-2">● ข้าวราดผัดไข่ (หมู/ไก่/มะระ/ผักกาดขาว)</div>
+                    <div class="menu-item py-2">● ข้าวราดใบโหระพาผัด (หมู/ไก่/เนื้อ)</div>
+                    <div class="menu-item py-2">● ข้าวราดผัดกะปิ (หมู/ไก่)</div>
+                    <div class="menu-item py-2">● ข้าวราดผัดหน่อไม้ (ไก่/หมู/กุ้ง/ปลาหมึก/ทะเล/ปลากะพง)</div>
+                    <div class="menu-item py-2">● ข้าวราดผัดน้ำพริกเผา (ไก่/หมู/หมูกรอบ)</div>
+                    <div class="menu-item py-2">● ข้าวราดปลาหมึกผัดไข่เค็ม</div>
+                    <div class="menu-item py-2">● ข้าวราดปลากระพงทอดกรอบเปรี้ยวหวาน</div>
+                    <div class="menu-item py-2">● ข้าวราดมะเขือยาวผัดปลาทอด</div>
+                    <div class="menu-item py-2">● ข้าวราดไก่ผัดขิง / หมูผัดขิง</div>
+                    <div class="menu-item py-2">● ข้าวลาบไก่ทอด / ลาบหมูทอด</div>
+                    <div class="menu-item py-2">● ข้าวราดแพนงไก่</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 🍜 เมนูเส้น -->
+        <section>
+            <h2 class="text-2xl font-semibold mb-6 flex items-center gap-2">
+                <span class="text-3xl text-orange-500">🍜</span> เมนูเส้นและสปาเก็ตตี้
+            </h2>
+            <div class="category-card p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-1">
+                    <div class="menu-item py-2">● ผัดไทย / ผัดไทยกุ้งสด</div>
+                    <div class="menu-item py-2">● ก๋วยเตี๋ยวคั่วไก่ / ทะเล</div>
+                    <div class="menu-item py-2">● ผัดซีอิ้ว (หมู / ไก่)</div>
+                    <div class="menu-item py-2">● เส้นใหญ่ผัดขี้เมา (ไก่/หมู/กุ้ง/ปลาหมึก)</div>
+                    <div class="menu-item py-2">● ราดหน้าเส้นกรอบหมูหมัก</div>
+                    <div class="menu-item py-2">● ก๋วยเตี๋ยวหมูสับ ไข่แดง / เนื้อสับ ไข่แดง</div>
+                    <div class="menu-item py-2">● สปาเก็ตตี้ผัดแหนมโหระพา</div>
+                    <div class="menu-item py-2">● สปาเก็ตตี้ผัดเบคอนพริกแห้งกรอบ</div>
+                    <div class="menu-item py-2">● สปาเก็ตตี้ลาบไก่ทอด</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 🍳 เมนูเพิ่มเติม -->
+        <section class="bg-gray-100 rounded-3xl p-8 border border-gray-200">
+            <h2 class="text-2xl font-semibold mb-6 flex items-center gap-2 text-gray-800">
+                <span class="text-3xl text-orange-500">🍳</span> เมนูเพิ่มเติม (Side Orders)
+            </h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="bg-white p-5 rounded-2xl text-center shadow-sm border border-gray-100">
+                    <div class="text-gray-500 text-xs mb-1">ADD-ON</div>
+                    <div class="text-gray-900 font-semibold">ไข่เจียว</div>
+                    <div class="text-orange-600 font-bold mt-1">10.-</div>
+                </div>
+                <div class="bg-white p-5 rounded-2xl text-center shadow-sm border border-gray-100">
+                    <div class="text-gray-500 text-xs mb-1">ADD-ON</div>
+                    <div class="text-gray-900 font-semibold">ไข่ดาว</div>
+                    <div class="text-orange-600 font-bold mt-1">10.-</div>
+                </div>
+                <div class="bg-white p-5 rounded-2xl text-center shadow-sm border border-gray-100">
+                    <div class="text-gray-500 text-xs mb-1">SIDE</div>
+                    <div class="text-gray-900 font-semibold">ไส้กรอกทอด</div>
+                    <div class="text-orange-600 font-bold mt-1">15.-</div>
+                </div>
+                <div class="bg-white p-5 rounded-2xl text-center shadow-sm border border-gray-100">
+                    <div class="text-gray-500 text-xs mb-1">SIDE</div>
+                    <div class="text-gray-900 font-semibold">กุนเชียงทอด</div>
+                    <div class="text-orange-600 font-bold mt-1">15.-</div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="mt-20 py-10 bg-white border-t border-gray-100 text-center">
+        <p class="text-gray-400 text-sm">© 2024 ร้านอาหารของคุณ - ขอบคุณที่ไว้วางใจในรสชาติของเรา</p>
+    </footer>
+
+</body>
+</html>
