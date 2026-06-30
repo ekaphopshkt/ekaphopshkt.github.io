@@ -1,42 +1,30 @@
-
 <!DOCTYPE html>
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <title>ระบบออเดอร์วาฟเฟิล (V1.74)</title>
+    <title>ระบบออเดอร์วาฟเฟิล (V1.73)</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 p-4">
     <div class="max-w-md mx-auto bg-white p-5 rounded-2xl shadow-lg">
-        <!-- สรุปยอดขายรายวัน (คลิกเพื่อดูรายละเอียด) -->
-        <div onclick="showDetail()" class="bg-blue-600 text-white p-4 rounded-xl mb-4 text-center cursor-pointer hover:bg-blue-700">
-            <h2 class="text-lg">ยอดขายวันนี้ (ดูรายละเอียด)</h2>
+        <div class="bg-blue-600 text-white p-4 rounded-xl mb-4 text-center">
+            <h2 class="text-lg">ยอดขายวันนี้</h2>
             <div class="text-3xl font-bold" id="dailyTotal">0 บาท</div>
             <div class="text-sm mt-2">ลูกค้า: <span id="dailyCust">0</span> | ชิ้น: <span id="dailyItems">0</span></div>
-            <button onclick="event.stopPropagation(); clearDay()" class="mt-3 bg-red-500 w-full py-1 rounded text-xs">เริ่มวันใหม่</button>
+            <button onclick="clearDay()" class="mt-3 bg-red-500 w-full py-1 rounded text-xs">เริ่มวันใหม่</button>
         </div>
 
-        <!-- รายละเอียดสรุป (ซ่อนไว้) -->
-        <div id="detailBox" class="hidden bg-gray-50 p-3 rounded-lg mb-4 text-sm text-gray-700">
-            <p>15 บาท: <span id="count15">0</span> ชิ้น</p>
-            <p>20 บาท: <span id="count20">0</span> ชิ้น</p>
-            <p>25 บาท: <span id="count25">0</span> ชิ้น</p>
-        </div>
-
-        <!-- ปุ่มโหมดผสม -->
         <div class="mb-4 bg-purple-50 p-3 rounded-lg border border-purple-200 text-center">
             <button id="mixBtn" onclick="toggleMixMode()" class="w-full bg-purple-600 text-white py-2 rounded font-bold text-sm">โหมดผสม 2 อย่าง (20 บาท)</button>
-            <p id="mixStatus" class="text-xs text-purple-700 mt-1 font-bold hidden">สถานะ: กำลังเลือกไส้ที่ 1</p>
+            <p id="mixStatus" class="text-xs text-purple-700 mt-1 font-bold hidden">สถานะ: กดเลือกเมนูที่ 1</p>
         </div>
 
-        <!-- ตั้งค่าเมนู -->
         <div class="bg-gray-100 p-3 rounded-lg mb-4">
             <input type="text" id="mName" placeholder="ชื่อเมนู" class="w-full p-1 mb-1 border rounded text-sm">
             <input type="number" id="mPrice" placeholder="ราคา" class="w-full p-1 mb-1 border rounded text-sm">
             <button onclick="saveMenu()" class="w-full bg-blue-500 text-white py-1 rounded text-sm font-bold">บันทึกเมนู</button>
         </div>
 
-        <!-- ปุ่มคาแรคเตอร์ -->
         <div class="grid grid-cols-4 gap-1 mb-2">
             <button onclick="addTag('หญิง')" class="bg-pink-100 p-1 text-xs rounded">หญิง</button>
             <button onclick="addTag('ชาย')" class="bg-blue-100 p-1 text-xs rounded">ชาย</button>
@@ -55,22 +43,20 @@
 
         <div id="presetButtons" class="grid grid-cols-2 gap-2 mb-4"></div>
         <div id="activeOrders" class="space-y-4 mb-6"></div>
-        <div class="text-center text-gray-400 text-[10px]">Version 1.74</div>
+        <div class="text-center text-gray-400 text-[10px]">Version 1.73</div>
     </div>
 
     <script>
-        // เพิ่ม q15, q20, q25 เข้าไปใน object stats
-        let stats = JSON.parse(localStorage.getItem('stats') || '{"total":0, "cust":0, "items":0, "q15":0, "q20":0, "q25":0}');
+        let stats = JSON.parse(localStorage.getItem('stats') || '{"total":0, "cust":0, "items":0}');
         let isMixMode = false;
         let mixItems = [];
-
-        function showDetail() { document.getElementById('detailBox').classList.toggle('hidden'); }
 
         function toggleMixMode() {
             isMixMode = !isMixMode;
             mixItems = [];
             let btn = document.getElementById('mixBtn');
             let status = document.getElementById('mixStatus');
+            
             if(isMixMode) {
                 btn.classList.add('bg-purple-800');
                 status.classList.remove('hidden');
@@ -88,8 +74,9 @@
             if(isMixMode) {
                 if(price !== 15) return alert("ผสมได้เฉพาะเมนูราคา 15 บาทเท่านั้น!");
                 mixItems.push(name);
+                
                 if(mixItems.length === 1) {
-                    document.getElementById('mixStatus').innerText = "เลือกไส้ที่ 1 แล้ว ("+name+") -> ต่อไปเลือกไส้ที่ 2";
+                    document.getElementById('mixStatus').innerText = "สถานะ: เลือกไส้ที่ 1 แล้ว ("+name+") -> ต่อไปเลือกไส้ที่ 2";
                 } else if(mixItems.length === 2) {
                     recordSale(mixItems.join('+'), 20);
                     mixItems = [];
@@ -100,39 +87,20 @@
             }
         }
 
+        // ... (ส่วนที่เหลือเหมือนเดิม)
+        function addTag(tag) { document.getElementById('cName').value += (document.getElementById('cName').value ? " " : "") + tag; }
+        
         function recordSale(name, price) {
             stats.total += price;
             stats.items++;
-            // อัปเดตจำนวนแยกตามราคา
-            if(price == 15) stats.q15++;
-            else if(price == 20) stats.q20++;
-            else if(price == 25) stats.q25++;
-            
             updateUI();
             let item = document.createElement('div');
             item.className = "flex justify-between bg-white px-2 py-1 my-1 rounded border border-green-200 cursor-pointer text-xs";
             item.innerHTML = `<span>${name}</span><span>${price}</span>`;
-            item.onclick = function() { 
-                // ลบแล้วลดยอดคืน (อย่างง่าย)
-                this.remove(); 
-                stats.total -= price; stats.items--;
-                if(price == 15) stats.q15--; else if(price == 20) stats.q20--; else if(price == 25) stats.q25--;
-                updateUI();
-            };
+            item.onclick = function() { this.remove(); };
             document.querySelector('.order-card .items').appendChild(item);
         }
 
-        function updateUI() {
-            document.getElementById('dailyTotal').innerText = stats.total + " บาท";
-            document.getElementById('dailyCust').innerText = stats.cust;
-            document.getElementById('dailyItems').innerText = stats.items;
-            document.getElementById('count15').innerText = stats.q15;
-            document.getElementById('count20').innerText = stats.q20;
-            document.getElementById('count25').innerText = stats.q25;
-            localStorage.setItem('stats', JSON.stringify(stats));
-        }
-
-        // ... (ฟังก์ชันอื่นเหมือนเดิม)
         function newOrder() {
             let nameInput = document.getElementById('cName');
             let name = nameInput.value || "ลูกค้าทั่วไป";
@@ -143,6 +111,13 @@
             div.innerHTML = `<div class="flex justify-between items-center mb-2"><h3 class="font-bold text-blue-700 text-sm">ลูกค้า: ${name}</h3><button onclick="this.parentElement.parentElement.remove()" class="bg-red-500 text-white px-2 py-0.5 rounded text-xs">ลบ</button></div><div class="items"></div>`;
             document.getElementById('activeOrders').prepend(div);
             nameInput.value = ''; 
+        }
+
+        function updateUI() {
+            document.getElementById('dailyTotal').innerText = stats.total + " บาท";
+            document.getElementById('dailyCust').innerText = stats.cust;
+            document.getElementById('dailyItems').innerText = stats.items;
+            localStorage.setItem('stats', JSON.stringify(stats));
         }
 
         function saveMenu() {
@@ -182,13 +157,12 @@
 
         function clearDay() {
             if(confirm("เริ่มวันใหม่? ยอดทั้งหมดจะถูกรีเซ็ต")) {
-                stats = {total:0, cust:0, items:0, q15:0, q20:0, q25:0};
+                stats = {total:0, cust:0, items:0};
                 document.getElementById('activeOrders').innerHTML = '';
                 updateUI();
             }
         }
         window.onload = () => { refreshMenuDisplay(); updateUI(); };
-        function addTag(tag) { document.getElementById('cName').value += (document.getElementById('cName').value ? " " : "") + tag; }
     </script>
 </body>
 </html>
