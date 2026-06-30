@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <title>ระบบออเดอร์วาฟเฟิล (V2.0 ผสมเฉพาะ 15.-)</title>
+    <title>ระบบออเดอร์วาฟเฟิล (V2.2)</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 p-4">
@@ -12,16 +12,26 @@
             <div class="text-3xl font-bold" id="dailyTotal">0 บาท</div>
         </div>
 
+        <div class="bg-gray-100 p-3 rounded-lg mb-4">
+            <input type="text" id="mName" placeholder="ชื่อเมนู" class="w-full p-1 mb-1 border rounded text-sm">
+            <input type="number" id="mPrice" placeholder="ราคา" class="w-full p-1 mb-1 border rounded text-sm">
+            <button onclick="saveMenu()" class="w-full bg-blue-500 text-white py-1 rounded text-sm font-bold">บันทึกเมนู</button>
+        </div>
+
         <div class="mb-4 bg-purple-50 p-3 rounded-lg border border-purple-200">
             <div class="flex gap-2">
                 <button id="btnNormal" onclick="setMode('normal')" class="flex-1 bg-blue-500 text-white p-2 rounded text-sm font-bold">ปกติ</button>
-                <button id="btnMix" onclick="setMode('mix')" class="flex-1 bg-purple-600 text-white p-2 rounded text-sm font-bold">ผสม 2 อย่าง (20.-)</button>
+                <button id="btnMix" onclick="setMode('mix')" class="flex-1 bg-purple-600 text-white p-2 rounded text-sm font-bold">ผสม 2 อย่าง</button>
             </div>
             <p id="modeStatus" class="text-xs text-purple-700 mt-2 font-bold text-center">โหมด: ปกติ</p>
         </div>
 
         <div id="presetButtons" class="grid grid-cols-2 gap-2 mb-4"></div>
         <div id="activeOrders" class="space-y-4 mb-6"></div>
+        
+        <div class="text-center text-gray-400 text-[10px] mt-4">ระบบจัดการออเดอร์วาฟเฟิล Version 2.2</div>
+
+        <button onclick="newOrder()" class="fixed bottom-4 right-4 bg-green-600 text-white w-12 h-12 rounded-full shadow-lg text-2xl">+</button>
     </div>
 
     <script>
@@ -32,7 +42,20 @@
         function setMode(mode) {
             currentMode = mode;
             mixQueue = [];
-            document.getElementById('modeStatus').innerText = mode === 'mix' ? "โหมด: เลือก 15.- สองอย่างเพื่อผสม (ราคา 20.-)" : "โหมด: ปกติ";
+            document.getElementById('modeStatus').innerText = mode === 'mix' ? "โหมด: เลือก 15.- สองอย่าง (ราคา 20.-)" : "โหมด: ปกติ";
+        }
+
+        function refreshMenuDisplay() {
+            let container = document.getElementById('presetButtons');
+            container.innerHTML = '';
+            let menus = JSON.parse(localStorage.getItem('myMenus') || '[]');
+            menus.forEach(m => {
+                let btn = document.createElement('button');
+                btn.className = "bg-gray-500 text-white p-2 rounded text-sm truncate";
+                btn.innerText = `${m.name} (${m.price})`;
+                btn.onclick = () => addToCurrent(m.name, m.price);
+                container.appendChild(btn);
+            });
         }
 
         function addToCurrent(name, price) {
@@ -40,16 +63,14 @@
             if(!active) return alert("โปรดเปิดบิลก่อน (กด +)");
 
             if(currentMode === 'mix') {
-                // เช็คว่าราคาเป็น 15 บาทเท่านั้น
-                if(price !== 15) return alert("เฉพาะเมนู 15 บาทเท่านั้นที่ผสมได้!");
-                
+                if(price !== 15) return alert("ผสมได้เฉพาะเมนู 15 บาทเท่านั้น!");
                 mixQueue.push(name);
                 if(mixQueue.length === 2) {
-                    recordSale(mixQueue.join('+'), 20);
+                    recordSale(`${mixQueue[0]} + ${mixQueue[1]}`, 20);
                     mixQueue = [];
                     setMode('normal');
                 } else {
-                    alert("เลือกอย่างที่ 1 แล้ว... เลือกอย่างที่ 2 ต่อได้เลย");
+                    alert("เลือกอย่างที่ 1 แล้ว... เลือกอย่างที่ 2 ต่อเลยครับ");
                 }
             } else {
                 recordSale(name, price);
@@ -59,10 +80,9 @@
         function recordSale(name, price) {
             stats.total += price;
             updateUI();
-            
             let item = document.createElement('div');
-            item.className = "flex justify-between bg-white px-2 py-1 my-1 rounded border border-green-200 text-xs cursor-pointer";
-            item.innerHTML = `<span>${name}</span><span>${price}</span>`;
+            item.className = "flex justify-between bg-white px-2 py-1 my-1 rounded border border-green-300 text-xs font-medium cursor-pointer shadow-sm";
+            item.innerHTML = `<span>${name}</span><span class="font-bold text-green-700">${price}.-</span>`;
             item.onclick = function() { this.remove(); };
             document.querySelector('.order-card .items').appendChild(item);
         }
@@ -70,29 +90,25 @@
         function newOrder() {
             let div = document.createElement('div');
             div.className = "border p-3 rounded-lg shadow-sm order-card bg-yellow-50";
-            div.innerHTML = `<div class="flex justify-between mb-2"><h3 class="font-bold text-blue-700 text-sm">รายการสั่งซื้อ</h3><button onclick="this.parentElement.parentElement.remove()" class="bg-red-500 text-white px-2 py-0.5 rounded text-xs">ลบบิล</button></div><div class="items"></div>`;
+            div.innerHTML = `<div class="flex justify-between mb-2"><h3 class="font-bold text-blue-700 text-sm">ออเดอร์ลูกค้า</h3><button onclick="this.parentElement.parentElement.remove()" class="bg-red-500 text-white px-2 py-0.5 rounded text-xs">ลบบิล</button></div><div class="items"></div>`;
             document.getElementById('activeOrders').prepend(div);
         }
-
-        // เพิ่มปุ่มเปิดบิลใหม่ที่หายไปในตัวอย่างที่แล้ว
-        document.body.insertAdjacentHTML('afterbegin', `<button onclick="newOrder()" class="fixed bottom-4 right-4 bg-green-600 text-white w-12 h-12 rounded-full shadow-lg text-2xl">+</button>`);
 
         function updateUI() {
             document.getElementById('dailyTotal').innerText = stats.total + " บาท";
             localStorage.setItem('stats', JSON.stringify(stats));
         }
 
-        function refreshMenuDisplay() {
-            let container = document.getElementById('presetButtons');
-            container.innerHTML = '';
-            let menus = [{name:'สังขยา', price:15}, {name:'ฝอยทอง', price:15}, {name:'กล้วย', price:15}, {name:'พิเศษ', price:25}];
-            menus.forEach(m => {
-                let btn = document.createElement('button');
-                btn.className = "bg-gray-500 text-white p-2 rounded text-sm";
-                btn.innerText = `${m.name} (${m.price})`;
-                btn.onclick = () => addToCurrent(m.name, m.price);
-                container.appendChild(btn);
-            });
+        function saveMenu() {
+            let n = document.getElementById('mName').value;
+            let p = parseInt(document.getElementById('mPrice').value);
+            if(!n || !p) return;
+            let menus = JSON.parse(localStorage.getItem('myMenus') || '[]');
+            menus.push({name: n, price: p});
+            localStorage.setItem('myMenus', JSON.stringify(menus));
+            refreshMenuDisplay();
+            document.getElementById('mName').value = '';
+            document.getElementById('mPrice').value = '';
         }
 
         window.onload = () => { refreshMenuDisplay(); updateUI(); };
