@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <title>ระบบออเดอร์วาฟเฟิล (V1.8 ผสมเมนูได้)</title>
+    <title>ระบบออเดอร์วาฟเฟิล (V2.0 ผสมเฉพาะ 15.-)</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 p-4">
@@ -10,35 +10,14 @@
         <div class="bg-blue-600 text-white p-4 rounded-xl mb-4 text-center">
             <h2 class="text-lg">ยอดขายวันนี้</h2>
             <div class="text-3xl font-bold" id="dailyTotal">0 บาท</div>
-            <div class="text-sm mt-2">ลูกค้า: <span id="dailyCust">0</span> | ชิ้น: <span id="dailyItems">0</span></div>
-            <button onclick="clearDay()" class="mt-3 bg-red-500 w-full py-1 rounded text-xs">เริ่มวันใหม่</button>
         </div>
 
-        <div class="bg-gray-100 p-3 rounded-lg mb-4">
-            <input type="text" id="mName" placeholder="ชื่อเมนู" class="w-full p-1 mb-1 border rounded text-sm">
-            <input type="number" id="mPrice" placeholder="ราคา" class="w-full p-1 mb-1 border rounded text-sm">
-            <button onclick="saveMenu()" class="w-full bg-blue-500 text-white py-1 rounded text-sm font-bold">บันทึกเมนู</button>
-        </div>
-
-        <div class="grid grid-cols-4 gap-1 mb-2">
-            <button onclick="addTag('หญิง')" class="bg-pink-100 p-1 text-xs rounded">หญิง</button>
-            <button onclick="addTag('ชาย')" class="bg-blue-100 p-1 text-xs rounded">ชาย</button>
-            <button onclick="addTag('ใส่แว่น')" class="bg-gray-200 p-1 text-xs rounded">ใส่แว่น</button>
-            <button onclick="addTag('ผมสั้น')" class="bg-gray-200 p-1 text-xs rounded">ผมสั้น</button>
-            <button onclick="addTag('ผมยาว')" class="bg-gray-200 p-1 text-xs rounded">ผมยาว</button>
-            <button onclick="addTag('ตัวเล็ก')" class="bg-gray-200 p-1 text-xs rounded">ตัวเล็ก</button>
-            <button onclick="addTag('ตัวสูง')" class="bg-gray-200 p-1 text-xs rounded">ตัวสูง</button>
-            <button onclick="addTag('อ้วน/ผอม')" class="bg-gray-200 p-1 text-xs rounded">อ้วน/ผอม</button>
-        </div>
-
-        <div class="flex gap-2 mb-4">
-            <input type="text" id="cName" placeholder="ชื่อ / ลักษณะลูกค้า" class="flex-1 p-2 border rounded">
-            <button onclick="newOrder()" class="bg-green-600 text-white px-4 rounded font-bold">+</button>
-        </div>
-
-        <div class="mb-4">
-            <p class="text-xs text-gray-500 mb-1">เมนูพิเศษ (ผสม 2 อย่าง):</p>
-            <button onclick="addToCurrent('ผสม 2 อย่าง', 20)" class="w-full bg-purple-500 text-white p-2 rounded-lg font-bold text-sm">ผสม 2 อย่าง (20 บาท)</button>
+        <div class="mb-4 bg-purple-50 p-3 rounded-lg border border-purple-200">
+            <div class="flex gap-2">
+                <button id="btnNormal" onclick="setMode('normal')" class="flex-1 bg-blue-500 text-white p-2 rounded text-sm font-bold">ปกติ</button>
+                <button id="btnMix" onclick="setMode('mix')" class="flex-1 bg-purple-600 text-white p-2 rounded text-sm font-bold">ผสม 2 อย่าง (20.-)</button>
+            </div>
+            <p id="modeStatus" class="text-xs text-purple-700 mt-2 font-bold text-center">โหมด: ปกติ</p>
         </div>
 
         <div id="presetButtons" class="grid grid-cols-2 gap-2 mb-4"></div>
@@ -46,101 +25,74 @@
     </div>
 
     <script>
-        let stats = JSON.parse(localStorage.getItem('stats') || '{"total":0, "cust":0, "items":0}');
+        let stats = JSON.parse(localStorage.getItem('stats') || '{"total":0}');
+        let currentMode = 'normal';
+        let mixQueue = [];
 
-        function addTag(tag) {
-            let input = document.getElementById('cName');
-            input.value += (input.value ? " " : "") + tag;
+        function setMode(mode) {
+            currentMode = mode;
+            mixQueue = [];
+            document.getElementById('modeStatus').innerText = mode === 'mix' ? "โหมด: เลือก 15.- สองอย่างเพื่อผสม (ราคา 20.-)" : "โหมด: ปกติ";
         }
 
         function addToCurrent(name, price) {
             let active = document.querySelector('.order-card');
-            if(!active) return alert("โปรดเปิดบิลก่อนครับ");
-            
+            if(!active) return alert("โปรดเปิดบิลก่อน (กด +)");
+
+            if(currentMode === 'mix') {
+                // เช็คว่าราคาเป็น 15 บาทเท่านั้น
+                if(price !== 15) return alert("เฉพาะเมนู 15 บาทเท่านั้นที่ผสมได้!");
+                
+                mixQueue.push(name);
+                if(mixQueue.length === 2) {
+                    recordSale(mixQueue.join('+'), 20);
+                    mixQueue = [];
+                    setMode('normal');
+                } else {
+                    alert("เลือกอย่างที่ 1 แล้ว... เลือกอย่างที่ 2 ต่อได้เลย");
+                }
+            } else {
+                recordSale(name, price);
+            }
+        }
+
+        function recordSale(name, price) {
             stats.total += price;
-            stats.items++;
             updateUI();
             
             let item = document.createElement('div');
-            item.className = "flex justify-between bg-white px-2 py-1 my-1 rounded border border-purple-300 cursor-pointer text-xs";
+            item.className = "flex justify-between bg-white px-2 py-1 my-1 rounded border border-green-200 text-xs cursor-pointer";
             item.innerHTML = `<span>${name}</span><span>${price}</span>`;
             item.onclick = function() { this.remove(); };
-            
-            active.querySelector('.items').appendChild(item);
+            document.querySelector('.order-card .items').appendChild(item);
         }
 
         function newOrder() {
-            let nameInput = document.getElementById('cName');
-            let name = nameInput.value || "ลูกค้าทั่วไป";
-            stats.cust++;
-            updateUI();
-            
             let div = document.createElement('div');
             div.className = "border p-3 rounded-lg shadow-sm order-card bg-yellow-50";
-            div.innerHTML = `
-                <div class="flex justify-between items-center mb-2">
-                    <h3 class="font-bold text-blue-700 text-sm">ลูกค้า: ${name}</h3>
-                    <button onclick="this.parentElement.parentElement.remove()" class="bg-red-500 text-white px-2 py-0.5 rounded text-xs">ลบบิล</button>
-                </div>
-                <div class="items"></div>`;
+            div.innerHTML = `<div class="flex justify-between mb-2"><h3 class="font-bold text-blue-700 text-sm">รายการสั่งซื้อ</h3><button onclick="this.parentElement.parentElement.remove()" class="bg-red-500 text-white px-2 py-0.5 rounded text-xs">ลบบิล</button></div><div class="items"></div>`;
             document.getElementById('activeOrders').prepend(div);
-            nameInput.value = ''; 
         }
+
+        // เพิ่มปุ่มเปิดบิลใหม่ที่หายไปในตัวอย่างที่แล้ว
+        document.body.insertAdjacentHTML('afterbegin', `<button onclick="newOrder()" class="fixed bottom-4 right-4 bg-green-600 text-white w-12 h-12 rounded-full shadow-lg text-2xl">+</button>`);
 
         function updateUI() {
             document.getElementById('dailyTotal').innerText = stats.total + " บาท";
-            document.getElementById('dailyCust').innerText = stats.cust;
-            document.getElementById('dailyItems').innerText = stats.items;
             localStorage.setItem('stats', JSON.stringify(stats));
-        }
-
-        function saveMenu() {
-            let n = document.getElementById('mName').value;
-            let p = parseInt(document.getElementById('mPrice').value);
-            if(!n || !p) return;
-            let menus = JSON.parse(localStorage.getItem('myMenus') || '[]');
-            menus.push({name: n, price: p});
-            localStorage.setItem('myMenus', JSON.stringify(menus));
-            refreshMenuDisplay();
-            document.getElementById('mName').value = '';
-            document.getElementById('mPrice').value = '';
         }
 
         function refreshMenuDisplay() {
             let container = document.getElementById('presetButtons');
             container.innerHTML = '';
-            let menus = JSON.parse(localStorage.getItem('myMenus') || '[]');
-            menus.sort((a, b) => a.price - b.price);
-            menus.forEach(m => createMenuBtn(m.name, m.price));
-        }
-
-        function createMenuBtn(name, price) {
-            let color = (price == 15) ? "bg-yellow-400" : (price == 20) ? "bg-green-500" : (price == 25) ? "bg-blue-500" : "bg-gray-500";
-            let container = document.getElementById('presetButtons');
-            let div = document.createElement('div');
-            div.className = `${color} text-white rounded text-sm flex overflow-hidden`;
-            div.innerHTML = `
-                <button class="p-2 flex-1 text-left truncate" onclick="addToCurrent('${name}', ${price})">${name}(${price})</button>
-                <button class="bg-black/20 px-2" onclick="confirmDelete('${name}')">x</button>
-            `;
-            container.appendChild(div);
-        }
-
-        function confirmDelete(name) {
-            if (confirm("ลบเมนู '" + name + "'?")) {
-                let menus = JSON.parse(localStorage.getItem('myMenus') || '[]');
-                menus = menus.filter(m => m.name !== name);
-                localStorage.setItem('myMenus', JSON.stringify(menus));
-                refreshMenuDisplay();
-            }
-        }
-
-        function clearDay() {
-            if(confirm("เริ่มวันใหม่? ยอดทั้งหมดจะถูกรีเซ็ต")) {
-                stats = {total:0, cust:0, items:0};
-                document.getElementById('activeOrders').innerHTML = '';
-                updateUI();
-            }
+            let menus = [{name:'สังขยา', price:15}, {name:'ฝอยทอง', price:15}, {name:'กล้วย', price:15}, {name:'พิเศษ', price:25}];
+            menus.forEach(m => {
+                let btn = document.createElement('button');
+                btn.className = "bg-gray-500 text-white p-2 rounded text-sm";
+                btn.innerText = `${m.name} (${m.price})`;
+                btn.onclick = () => addToCurrent(m.name, m.price);
+                container.appendChild(btn);
+            });
         }
 
         window.onload = () => { refreshMenuDisplay(); updateUI(); };
