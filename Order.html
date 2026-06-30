@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <title>ระบบออเดอร์วาฟเฟิล (V1.7)</title>
+    <title>ระบบออเดอร์วาฟเฟิล (V1.7+Mix)</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 p-4">
@@ -12,6 +12,11 @@
             <div class="text-3xl font-bold" id="dailyTotal">0 บาท</div>
             <div class="text-sm mt-2">ลูกค้า: <span id="dailyCust">0</span> | ชิ้น: <span id="dailyItems">0</span></div>
             <button onclick="clearDay()" class="mt-3 bg-red-500 w-full py-1 rounded text-xs">เริ่มวันใหม่</button>
+        </div>
+
+        <div class="mb-4 bg-purple-50 p-3 rounded-lg border border-purple-200 text-center">
+            <button id="mixBtn" onclick="toggleMixMode()" class="w-full bg-purple-600 text-white py-2 rounded font-bold text-sm">โหมดผสม 2 อย่าง (20 บาท)</button>
+            <p id="mixStatus" class="text-xs text-purple-700 mt-1 font-bold hidden">เลือกเมนู 15 บาท 2 รายการ...</p>
         </div>
 
         <div class="bg-gray-100 p-3 rounded-lg mb-4">
@@ -38,50 +43,62 @@
 
         <div id="presetButtons" class="grid grid-cols-2 gap-2 mb-4"></div>
         <div id="activeOrders" class="space-y-4 mb-6"></div>
+        <div class="text-center text-gray-400 text-[10px]">Version 1.7+Mix</div>
     </div>
 
     <script>
         let stats = JSON.parse(localStorage.getItem('stats') || '{"total":0, "cust":0, "items":0}');
+        let isMixMode = false;
+        let mixItems = [];
+
+        function toggleMixMode() {
+            isMixMode = !isMixMode;
+            mixItems = [];
+            document.getElementById('mixBtn').classList.toggle('bg-purple-800');
+            document.getElementById('mixStatus').classList.toggle('hidden');
+        }
 
         function addTag(tag) {
             let input = document.getElementById('cName');
             input.value += (input.value ? " " : "") + tag;
         }
 
-        // เพิ่มเมนูใหม่
         function addToCurrent(name, price) {
             let active = document.querySelector('.order-card');
             if(!active) return alert("โปรดเปิดบิลก่อนครับ");
             
-            // บันทึกยอดขายถาวรทันทีที่กด (ไม่ว่าจะลบรายการออกทีหลัง ยอดนี้ก็ไม่หาย)
+            if(isMixMode) {
+                if(price !== 15) return alert("ผสมได้เฉพาะเมนูราคา 15 บาทเท่านั้น!");
+                mixItems.push(name);
+                if(mixItems.length === 2) {
+                    recordSale(mixItems.join('+'), 20);
+                    mixItems = [];
+                    toggleMixMode();
+                }
+            } else {
+                recordSale(name, price);
+            }
+        }
+
+        function recordSale(name, price) {
             stats.total += price;
             stats.items++;
             updateUI();
-            
             let item = document.createElement('div');
             item.className = "flex justify-between bg-white px-2 py-1 my-1 rounded border border-green-200 cursor-pointer text-xs";
             item.innerHTML = `<span>${name}</span><span>${price}</span>`;
-            
-            // คลิกรายการในบิลเพื่อ "ติ๊กออก" (ลบรายการออกจากหน้าจอ)
             item.onclick = function() { this.remove(); };
-            
-            active.querySelector('.items').appendChild(item);
+            document.querySelector('.order-card .items').appendChild(item);
         }
 
         function newOrder() {
             let nameInput = document.getElementById('cName');
             let name = nameInput.value || "ลูกค้าทั่วไป";
             stats.cust++;
-            updateUI(); // อัปเดตจำนวนลูกค้า
-            
+            updateUI();
             let div = document.createElement('div');
             div.className = "border p-3 rounded-lg shadow-sm order-card bg-yellow-50";
-            div.innerHTML = `
-                <div class="flex justify-between items-center mb-2">
-                    <h3 class="font-bold text-blue-700 text-sm">ลูกค้า: ${name}</h3>
-                    <button onclick="this.parentElement.parentElement.remove()" class="bg-red-500 text-white px-2 py-0.5 rounded text-xs">ลบบิลนี้ออก</button>
-                </div>
-                <div class="items"></div>`;
+            div.innerHTML = `<div class="flex justify-between items-center mb-2"><h3 class="font-bold text-blue-700 text-sm">ลูกค้า: ${name}</h3><button onclick="this.parentElement.parentElement.remove()" class="bg-red-500 text-white px-2 py-0.5 rounded text-xs">ลบ</button></div><div class="items"></div>`;
             document.getElementById('activeOrders').prepend(div);
             nameInput.value = ''; 
         }
@@ -93,7 +110,6 @@
             localStorage.setItem('stats', JSON.stringify(stats));
         }
 
-        // ฟังก์ชันจัดการเมนูคงเดิม
         function saveMenu() {
             let n = document.getElementById('mName').value;
             let p = parseInt(document.getElementById('mPrice').value);
@@ -110,20 +126,12 @@
             let container = document.getElementById('presetButtons');
             container.innerHTML = '';
             let menus = JSON.parse(localStorage.getItem('myMenus') || '[]');
-            menus.sort((a, b) => a.price - b.price);
-            menus.forEach(m => createMenuBtn(m.name, m.price));
-        }
-
-        function createMenuBtn(name, price) {
-            let color = (price == 15) ? "bg-yellow-400" : (price == 20) ? "bg-green-500" : (price == 25) ? "bg-blue-500" : "bg-gray-500";
-            let container = document.getElementById('presetButtons');
-            let div = document.createElement('div');
-            div.className = `${color} text-white rounded text-sm flex overflow-hidden`;
-            div.innerHTML = `
-                <button class="p-2 flex-1 text-left truncate" onclick="addToCurrent('${name}', ${price})">${name}(${price})</button>
-                <button class="bg-black/20 px-2" onclick="confirmDelete('${name}')">x</button>
-            `;
-            container.appendChild(div);
+            menus.forEach(m => {
+                let div = document.createElement('div');
+                div.className = "bg-gray-500 text-white rounded text-sm flex overflow-hidden";
+                div.innerHTML = `<button class="p-2 flex-1 text-left truncate" onclick="addToCurrent('${m.name}', ${m.price})">${m.name}(${m.price})</button><button class="bg-black/20 px-2" onclick="confirmDelete('${m.name}')">x</button>`;
+                container.appendChild(div);
+            });
         }
 
         function confirmDelete(name) {
