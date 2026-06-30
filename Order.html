@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <title>ระบบรับออเดอร์วาฟเฟิล</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-yellow-50 p-6">
+    <div class="max-w-sm mx-auto bg-white p-5 rounded-xl shadow-md border-2 border-yellow-200">
+        <h2 class="text-xl font-bold text-yellow-600 mb-4 text-center">ออเดอร์วาฟเฟิล</h2>
+        
+        <input type="text" id="customer" placeholder="ชื่อลูกค้า (ชื่อเล่น)" class="w-full p-2 mb-3 border rounded">
+        
+        <div class="flex gap-2 mb-3">
+            <input type="text" id="menu" placeholder="เมนู" class="w-2/3 p-2 border rounded">
+            <input type="number" id="price" placeholder="ราคา" class="w-1/3 p-2 border rounded">
+        </div>
+        
+        <button onclick="add()" class="w-full bg-yellow-500 text-white p-2 rounded font-bold mb-4">เพิ่มรายการ</button>
+        
+        <div id="list" class="mb-4 text-sm"></div>
+        
+        <div class="border-t pt-2 text-right">
+            <span class="font-bold">รวม: </span><span id="total" class="font-bold text-lg">0</span> บาท
+        </div>
+        <button onclick="confirm()" class="w-full bg-green-600 text-white p-3 mt-3 rounded-lg font-bold">ยืนยันออเดอร์</button>
+    </div>
+
+    <script>
+        let total = 0;
+        function add() {
+            let m = document.getElementById('menu').value;
+            let p = parseInt(document.getElementById('price').value);
+            if(m && p) {
+                total += p;
+                document.getElementById('list').innerHTML += `<div class="flex justify-between border-b py-1"><span>${m}</span><span>${p}</span></div>`;
+                document.getElementById('total').innerText = total;
+                document.getElementById('menu').value = '';
+                document.getElementById('price').value = '';
+            }
+        }
+        function confirm() {
+            let name = document.getElementById('customer').value || 'ลูกค้า';
+            alert('ออเดอร์ของ ' + name + ' ยอดรวม ' + total + ' บาท เรียบร้อยครับ!');
+        }
+    </script>
+</body>
+</html>
