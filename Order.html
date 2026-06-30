@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <title>ระบบออเดอร์วาฟเฟิล (V1.7)</title>
+    <title>ระบบออเดอร์วาฟเฟิล (V1.8 ผสมเมนูได้)</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 p-4">
@@ -36,6 +36,11 @@
             <button onclick="newOrder()" class="bg-green-600 text-white px-4 rounded font-bold">+</button>
         </div>
 
+        <div class="mb-4">
+            <p class="text-xs text-gray-500 mb-1">เมนูพิเศษ (ผสม 2 อย่าง):</p>
+            <button onclick="addToCurrent('ผสม 2 อย่าง', 20)" class="w-full bg-purple-500 text-white p-2 rounded-lg font-bold text-sm">ผสม 2 อย่าง (20 บาท)</button>
+        </div>
+
         <div id="presetButtons" class="grid grid-cols-2 gap-2 mb-4"></div>
         <div id="activeOrders" class="space-y-4 mb-6"></div>
     </div>
@@ -48,21 +53,17 @@
             input.value += (input.value ? " " : "") + tag;
         }
 
-        // เพิ่มเมนูใหม่
         function addToCurrent(name, price) {
             let active = document.querySelector('.order-card');
             if(!active) return alert("โปรดเปิดบิลก่อนครับ");
             
-            // บันทึกยอดขายถาวรทันทีที่กด (ไม่ว่าจะลบรายการออกทีหลัง ยอดนี้ก็ไม่หาย)
             stats.total += price;
             stats.items++;
             updateUI();
             
             let item = document.createElement('div');
-            item.className = "flex justify-between bg-white px-2 py-1 my-1 rounded border border-green-200 cursor-pointer text-xs";
+            item.className = "flex justify-between bg-white px-2 py-1 my-1 rounded border border-purple-300 cursor-pointer text-xs";
             item.innerHTML = `<span>${name}</span><span>${price}</span>`;
-            
-            // คลิกรายการในบิลเพื่อ "ติ๊กออก" (ลบรายการออกจากหน้าจอ)
             item.onclick = function() { this.remove(); };
             
             active.querySelector('.items').appendChild(item);
@@ -72,14 +73,14 @@
             let nameInput = document.getElementById('cName');
             let name = nameInput.value || "ลูกค้าทั่วไป";
             stats.cust++;
-            updateUI(); // อัปเดตจำนวนลูกค้า
+            updateUI();
             
             let div = document.createElement('div');
             div.className = "border p-3 rounded-lg shadow-sm order-card bg-yellow-50";
             div.innerHTML = `
                 <div class="flex justify-between items-center mb-2">
                     <h3 class="font-bold text-blue-700 text-sm">ลูกค้า: ${name}</h3>
-                    <button onclick="this.parentElement.parentElement.remove()" class="bg-red-500 text-white px-2 py-0.5 rounded text-xs">ลบบิลนี้ออก</button>
+                    <button onclick="this.parentElement.parentElement.remove()" class="bg-red-500 text-white px-2 py-0.5 rounded text-xs">ลบบิล</button>
                 </div>
                 <div class="items"></div>`;
             document.getElementById('activeOrders').prepend(div);
@@ -93,7 +94,6 @@
             localStorage.setItem('stats', JSON.stringify(stats));
         }
 
-        // ฟังก์ชันจัดการเมนูคงเดิม
         function saveMenu() {
             let n = document.getElementById('mName').value;
             let p = parseInt(document.getElementById('mPrice').value);
