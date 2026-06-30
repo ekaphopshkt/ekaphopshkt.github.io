@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <title>ระบบออเดอร์วาฟเฟิล (V1.2)</title>
+    <title>ระบบออเดอร์วาฟเฟิล (V1.4)</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 p-4">
@@ -11,7 +11,7 @@
             <h2 class="text-lg">ยอดขายวันนี้</h2>
             <div class="text-3xl font-bold" id="dailyTotal">0 บาท</div>
             <div class="text-sm mt-2">ลูกค้า: <span id="dailyCust">0</span> | ชิ้น: <span id="dailyItems">0</span></div>
-            <button onclick="clearDay()" class="mt-3 bg-red-500 w-full py-1 rounded text-xs">เริ่มวันใหม่</button>
+            <button onclick="clearDay()" class="mt-3 bg-red-500 w-full py-1 rounded text-xs">เริ่มวันใหม่ (ล้างยอดทั้งหมด)</button>
         </div>
 
         <div class="bg-gray-100 p-3 rounded-lg mb-4">
@@ -52,7 +52,7 @@
             let container = document.getElementById('presetButtons');
             container.innerHTML = '';
             let menus = JSON.parse(localStorage.getItem('myMenus') || '[]');
-            menus.sort((a, b) => a.price - b.price); // เรียงตามราคาให้สีอยู่กลุ่มเดียวกัน
+            menus.sort((a, b) => a.price - b.price);
             menus.forEach(m => createMenuBtn(m.name, m.price));
         }
 
@@ -95,7 +95,13 @@
             stats.cust++;
             let div = document.createElement('div');
             div.className = "border p-3 rounded-lg shadow-sm order-card bg-yellow-50";
-            div.innerHTML = `<div class="flex justify-between items-center mb-2"><h3 class="font-bold text-blue-700 text-sm">ลูกค้า: ${name}</h3><button onclick="this.parentElement.parentElement.remove()" class="bg-red-500 text-white px-2 py-0.5 rounded text-xs">ลบออเดอร์นี้</button></div><div class="items"></div><p class="font-bold text-right text-sm">รวม: <span class="total">0</span></p>`;
+            div.innerHTML = `
+                <div class="flex justify-between items-center mb-2">
+                    <h3 class="font-bold text-blue-700 text-sm">ลูกค้า: ${name}</h3>
+                    <button onclick="this.parentElement.parentElement.remove()" class="bg-red-500 text-white px-2 py-0.5 rounded text-xs">ลบบิลนี้</button>
+                </div>
+                <div class="items"></div>
+                <p class="font-bold text-right text-sm">รวม: <span class="total">0</span></p>`;
             document.getElementById('activeOrders').prepend(div);
             nameInput.value = ''; 
             updateUI();
@@ -103,13 +109,21 @@
 
         function addToCurrent(name, price) {
             let active = document.querySelector('.order-card');
-            if(!active) return alert("โปรดกด '+' เพื่อเปิดบิลก่อนครับ");
+            if(!active) return alert("โปรดเปิดบิลก่อนครับ");
+            
             stats.total += price;
             stats.items++;
+            
             let item = document.createElement('div');
             item.className = "flex justify-between bg-white px-2 py-1 my-1 rounded cursor-pointer text-xs";
             item.innerHTML = `<span>${name}</span><span>${price}</span>`;
-            item.onclick = function() { this.remove(); stats.total -= price; stats.items--; updateUI(); };
+            item.onclick = function() { 
+                this.remove(); 
+                stats.total -= price; 
+                stats.items--; 
+                active.querySelector('.total').innerText = parseInt(active.querySelector('.total').innerText) - price;
+                updateUI(); 
+            };
             active.querySelector('.items').appendChild(item);
             active.querySelector('.total').innerText = parseInt(active.querySelector('.total').innerText) + price;
             updateUI();
