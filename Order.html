@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <title>ระบบออเดอร์วาฟเฟิล (V2.2 - ยอดไม่หาย)</title>
+    <title>ระบบออเดอร์วาฟเฟิล (V2.3)</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 p-4">
@@ -48,7 +48,7 @@
 
         <div id="presetButtons" class="grid grid-cols-2 gap-2 mb-4"></div>
         <div id="activeOrders" class="space-y-4 mb-6"></div>
-        <div class="text-center text-gray-400 text-[10px]">Version 2.2</div>
+        <div class="text-center text-gray-400 text-[10px]">Version 2.3</div>
     </div>
 
     <script>
@@ -71,7 +71,6 @@
             let item = document.createElement('div');
             item.className = "flex justify-between bg-white px-2 py-1 my-1 rounded border border-green-200 cursor-pointer text-xs";
             item.innerHTML = `<span>${name}</span><span>${price}</span>`;
-            // ลบเฉพาะรายการในหน้าจอ แต่ไม่ลบ stats
             item.onclick = function() { this.remove(); };
             document.querySelector('.order-card .items').appendChild(item);
         }
@@ -83,52 +82,11 @@
             localStorage.setItem('stats', JSON.stringify(stats));
         }
 
-        // ส่วนอื่นๆ คงเดิม...
-        function toggleMixMode() {
-            isMixMode = !isMixMode;
-            mixItems = [];
-            let btn = document.getElementById('mixBtn');
-            let status = document.getElementById('mixStatus');
-            if(isMixMode) { btn.classList.add('bg-purple-800'); status.classList.remove('hidden'); }
-            else { btn.classList.remove('bg-purple-800'); status.classList.add('hidden'); }
-        }
-
-        function addToCurrent(name, price) {
-            let active = document.querySelector('.order-card');
-            if(!active) return alert("โปรดเปิดบิลก่อนครับ");
-            if(isMixMode) {
-                if(price !== 15) return alert("ผสมได้เฉพาะเมนู 15 บาท!");
-                mixItems.push(name);
-                if(mixItems.length === 2) { recordSale(mixItems.join('+'), 20); mixItems = []; toggleMixMode(); }
-            } else { recordSale(name, price); }
-        }
-
-        function newOrder() {
-            let nameInput = document.getElementById('cName');
-            stats.cust++;
-            updateUI();
-            let div = document.createElement('div');
-            div.className = "border p-3 rounded-lg shadow-sm order-card bg-yellow-50";
-            div.innerHTML = `<div class="flex justify-between items-center mb-2"><h3 class="font-bold text-blue-700 text-sm">ลูกค้า: ${nameInput.value || "ทั่วไป"}</h3><button onclick="this.parentElement.parentElement.remove()" class="bg-red-500 text-white px-2 py-0.5 rounded text-xs">ลบ</button></div><div class="items"></div>`;
-            document.getElementById('activeOrders').prepend(div);
-            nameInput.value = ''; 
-        }
-
-        function saveMenu() {
-            let n = document.getElementById('mName').value;
-            let p = parseInt(document.getElementById('mPrice').value);
-            if(!n || !p) return;
-            let menus = JSON.parse(localStorage.getItem('myMenus') || '[]');
-            menus.push({name: n, price: p});
-            localStorage.setItem('myMenus', JSON.stringify(menus));
-            refreshMenuDisplay();
-            document.getElementById('mName').value = ''; document.getElementById('mPrice').value = '';
-        }
-
         function refreshMenuDisplay() {
             let container = document.getElementById('presetButtons');
             container.innerHTML = '';
             let menus = JSON.parse(localStorage.getItem('myMenus') || '[]');
+            menus.sort((a, b) => a.price - b.price);
             menus.forEach(m => {
                 let colorClass = (m.price == 15) ? "bg-yellow-500" : (m.price == 20) ? "bg-green-600" : "bg-blue-600";
                 let div = document.createElement('div');
@@ -138,20 +96,12 @@
             });
         }
 
-        function confirmDelete(name) {
-            let menus = JSON.parse(localStorage.getItem('myMenus') || '[]');
-            menus = menus.filter(m => m.name !== name);
-            localStorage.setItem('myMenus', JSON.stringify(menus));
-            refreshMenuDisplay();
-        }
-
-        function clearDay() {
-            if(confirm("เริ่มวันใหม่? ยอดทั้งหมดจะถูกรีเซ็ต")) {
-                stats = {total:0, cust:0, items:0, q15:0, q20:0, q25:0};
-                document.getElementById('activeOrders').innerHTML = '';
-                updateUI();
-            }
-        }
+        function toggleMixMode() { isMixMode = !isMixMode; mixItems = []; let btn = document.getElementById('mixBtn'); let status = document.getElementById('mixStatus'); if(isMixMode) { btn.classList.add('bg-purple-800'); status.classList.remove('hidden'); } else { btn.classList.remove('bg-purple-800'); status.classList.add('hidden'); } }
+        function addToCurrent(name, price) { let active = document.querySelector('.order-card'); if(!active) return alert("โปรดเปิดบิลก่อนครับ"); if(isMixMode) { if(price !== 15) return alert("ผสมได้เฉพาะเมนู 15 บาท!"); mixItems.push(name); if(mixItems.length === 2) { recordSale(mixItems.join('+'), 20); mixItems = []; toggleMixMode(); } } else { recordSale(name, price); } }
+        function newOrder() { let nameInput = document.getElementById('cName'); stats.cust++; updateUI(); let div = document.createElement('div'); div.className = "border p-3 rounded-lg shadow-sm order-card bg-yellow-50"; div.innerHTML = `<div class="flex justify-between items-center mb-2"><h3 class="font-bold text-blue-700 text-sm">ลูกค้า: ${nameInput.value || "ทั่วไป"}</h3><button onclick="this.parentElement.parentElement.remove()" class="bg-red-500 text-white px-2 py-0.5 rounded text-xs">ลบ</button></div><div class="items"></div>`; document.getElementById('activeOrders').prepend(div); nameInput.value = ''; }
+        function saveMenu() { let n = document.getElementById('mName').value; let p = parseInt(document.getElementById('mPrice').value); if(!n || !p) return; let menus = JSON.parse(localStorage.getItem('myMenus') || '[]'); menus.push({name: n, price: p}); localStorage.setItem('myMenus', JSON.stringify(menus)); refreshMenuDisplay(); document.getElementById('mName').value = ''; document.getElementById('mPrice').value = ''; }
+        function confirmDelete(name) { let menus = JSON.parse(localStorage.getItem('myMenus') || '[]'); menus = menus.filter(m => m.name !== name); localStorage.setItem('myMenus', JSON.stringify(menus)); refreshMenuDisplay(); }
+        function clearDay() { if(confirm("เริ่มวันใหม่? ยอดทั้งหมดจะถูกรีเซ็ต")) { stats = {total:0, cust:0, items:0, q15:0, q20:0, q25:0}; document.getElementById('activeOrders').innerHTML = ''; updateUI(); } }
         window.onload = () => { refreshMenuDisplay(); updateUI(); };
         function addTag(tag) { document.getElementById('cName').value += (document.getElementById('cName').value ? " " : "") + tag; }
     </script>
