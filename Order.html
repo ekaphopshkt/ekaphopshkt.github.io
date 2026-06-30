@@ -2,68 +2,68 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <title>ระบบรับออเดอร์วาฟเฟิล</title>
+    <title>ระบบออเดอร์วาฟเฟิลรายบุคคล</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-yellow-50 p-4">
+<body class="bg-gray-50 p-4">
     <div class="max-w-md mx-auto bg-white p-5 rounded-2xl shadow-lg">
-        <h2 class="text-xl font-bold text-yellow-600 mb-4 text-center">รับออเดอร์วาฟเฟิล</h2>
-        
-        <!-- ส่วนตั้งค่าเมนู (ทำครั้งเดียว) -->
-        <div class="bg-gray-100 p-3 rounded-lg mb-4">
-            <input type="text" id="newMenu" placeholder="ชื่อเมนู" class="w-full p-1 mb-1 text-sm border rounded">
-            <input type="number" id="newPrice" placeholder="ราคา" class="w-full p-1 mb-1 text-sm border rounded">
-            <button onclick="addPreset()" class="w-full bg-blue-500 text-white py-1 rounded text-sm">เพิ่มเมนูลงในรายการตัวเลือก</button>
+        <h2 class="text-xl font-bold text-yellow-600 mb-4 text-center">จัดการออเดอร์วาฟเฟิล</h2>
+
+        <!-- ตั้งค่าเมนู -->
+        <div class="bg-yellow-50 p-3 rounded-lg mb-4 border border-yellow-200">
+            <input type="text" id="menuName" placeholder="ชื่อเมนู" class="w-full p-1 mb-1 text-sm border rounded">
+            <input type="number" id="menuPrice" placeholder="ราคา" class="w-full p-1 mb-1 text-sm border rounded">
+            <button onclick="addPreset()" class="w-full bg-blue-500 text-white py-1 rounded text-sm font-bold">บันทึกเมนูใหม่</button>
         </div>
 
-        <input type="text" id="customer" placeholder="ชื่อลูกค้า" class="w-full p-2 mb-3 border rounded">
-        
-        <!-- ส่วนเลือกเมนู -->
-        <div id="menuButtons" class="grid grid-cols-2 gap-2 mb-4">
-            <!-- ปุ่มเมนูจะมาแสดงที่นี่ -->
+        <!-- สร้างออเดอร์ลูกค้า -->
+        <div class="flex gap-2 mb-4">
+            <input type="text" id="customerName" placeholder="ชื่อลูกค้า" class="flex-1 p-2 border rounded">
+            <button onclick="newOrder()" class="bg-green-600 text-white px-4 rounded font-bold">เปิดบิล</button>
         </div>
 
-        <div id="orderList" class="space-y-2 mb-4"></div>
-
-        <div class="border-t pt-2 text-right">
-            <span class="font-bold">รวม: </span><span id="total" class="font-bold text-lg">0</span> บาท
-        </div>
-        <button onclick="clearAll()" class="w-full bg-red-500 text-white p-2 mt-2 rounded-lg font-bold">ล้างออเดอร์ทั้งหมด</button>
+        <div id="presetButtons" class="grid grid-cols-2 gap-2 mb-4"></div>
+        <div id="activeOrders" class="space-y-4"></div>
     </div>
 
     <script>
-        let total = 0;
-        
         function addPreset() {
-            let name = document.getElementById('newMenu').value;
-            let price = document.getElementById('newPrice').value;
-            if(name && price) {
-                let btn = document.createElement('button');
-                btn.className = "bg-yellow-500 text-white p-2 rounded text-sm";
-                btn.innerText = name + " (" + price + ")";
-                btn.onclick = () => addItem(name, parseInt(price));
-                document.getElementById('menuButtons').appendChild(btn);
-            }
+            let n = document.getElementById('menuName').value;
+            let p = document.getElementById('menuPrice').value;
+            if(!n || !p) return;
+            let btn = document.createElement('button');
+            btn.className = "bg-yellow-500 text-white p-2 rounded text-sm hover:bg-yellow-600";
+            btn.innerText = `${n} (${p})`;
+            btn.onclick = () => addToCurrent(n, p);
+            document.getElementById('presetButtons').appendChild(btn);
         }
 
-        function addItem(name, price) {
-            total += price;
+        function newOrder() {
+            let name = document.getElementById('customerName').value || "ไม่ระบุชื่อ";
             let div = document.createElement('div');
-            div.className = "flex justify-between bg-green-100 p-2 rounded cursor-pointer hover:bg-red-100 transition";
-            div.innerHTML = `<span>${name}</span><span>${price}</span>`;
-            div.onclick = function() {
-                total -= price;
-                document.getElementById('total').innerText = total;
+            div.className = "border-t pt-3 order-card";
+            div.innerHTML = `<h3 class="font-bold text-lg text-blue-800">ลูกค้า: ${name}</h3><div class="items"></div><p class="font-bold">รวม: <span class="total">0</span> บาท</p>`;
+            document.getElementById('activeOrders').prepend(div);
+            document.getElementById('customerName').value = '';
+        }
+
+        function addToCurrent(name, price) {
+            let active = document.querySelector('.order-card');
+            if(!active) return alert("โปรดกด 'เปิดบิล' ก่อนครับ");
+            
+            let item = document.createElement('div');
+            item.className = "flex justify-between bg-gray-100 px-2 py-1 my-1 rounded text-sm cursor-pointer hover:bg-red-200";
+            item.innerHTML = `<span>${name}</span><span>${price}</span>`;
+            item.onclick = function() {
+                let p = parseInt(price);
+                let totalSpan = active.querySelector('.total');
+                totalSpan.innerText = parseInt(totalSpan.innerText) - p;
                 this.remove();
             };
-            document.getElementById('orderList').appendChild(div);
-            document.getElementById('total').innerText = total;
-        }
-
-        function clearAll() {
-            document.getElementById('orderList').innerHTML = '';
-            total = 0;
-            document.getElementById('total').innerText = 0;
+            
+            active.querySelector('.items').appendChild(item);
+            let totalSpan = active.querySelector('.total');
+            totalSpan.innerText = parseInt(totalSpan.innerText) + parseInt(price);
         }
     </script>
 </body>
