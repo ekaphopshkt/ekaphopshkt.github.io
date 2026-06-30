@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <title>ระบบออเดอร์วาฟเฟิล (V2.1)</title>
+    <title>ระบบออเดอร์วาฟเฟิล (V2.1.1)</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 p-4">
@@ -35,33 +35,4 @@
         <div class="grid grid-cols-4 gap-1 mb-2">
             <button onclick="addTag('หญิง')" class="bg-pink-100 p-1 text-xs rounded">หญิง</button>
             <button onclick="addTag('ชาย')" class="bg-blue-100 p-1 text-xs rounded">ชาย</button>
-            <button onclick="addTag('ใส่แว่น')" class="bg-gray-200 p-1 text-xs rounded">ใส่แว่น</button>
-            <button onclick="addTag('ผมสั้น')" class="bg-gray-200 p-1 text-xs rounded">ผมสั้น</button>
-            <button onclick="addTag('ผมยาว')" class="bg-gray-200 p-1 text-xs rounded">ผมยาว</button>
-            <button onclick="addTag('ตัวเล็ก')" class="bg-gray-200 p-1 text-xs rounded">ตัวเล็ก</button>
-            <button onclick="addTag('ตัวสูง')" class="bg-gray-200 p-1 text-xs rounded">ตัวสูง</button>
-            <button onclick="addTag('อ้วน/ผอม')" class="bg-gray-200 p-1 text-xs rounded">อ้วน/ผอม</button>
-        </div>
-
-        <div class="flex gap-2 mb-4">
-            <input type="text" id="cName" placeholder="ชื่อ / ลักษณะลูกค้า" class="flex-1 p-2 border rounded">
-            <button onclick="newOrder()" class="bg-green-600 text-white px-4 rounded font-bold">+</button>
-        </div>
-
-        <div id="presetButtons" class="grid grid-cols-2 gap-2 mb-4"></div>
-        <div id="activeOrders" class="space-y-4 mb-6"></div>
-        <div class="text-center text-gray-400 text-[10px]">Version 2.1</div>
-    </div>
-
-    <script>
-        let stats = JSON.parse(localStorage.getItem('stats') || '{"total":0, "cust":0, "items":0, "q15":0, "q20":0, "q25":0}');
-        let isMixMode = false;
-        let mixItems = [];
-
-        function toggleMixMode() {
-            isMixMode = !isMixMode;
-            mixItems = [];
-            let btn = document.getElementById('mixBtn');
-            let status = document.getElementById('mixStatus');
-            if(isMixMode) {
-                btn.classList.add('bg-purple-800');
+            <button onclick="addTag('ใส่แว่น')" class="bg-gray-200 p-1 text-xs rounded">ใส่
