@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <title>ระบบออเดอร์วาฟเฟิล (V1.4)</title>
+    <title>ระบบออเดอร์วาฟเฟิล (V1.5)</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 p-4">
@@ -101,7 +101,7 @@
                     <button onclick="this.parentElement.parentElement.remove()" class="bg-red-500 text-white px-2 py-0.5 rounded text-xs">ลบบิลนี้</button>
                 </div>
                 <div class="items"></div>
-                <p class="font-bold text-right text-sm">รวม: <span class="total">0</span></p>`;
+                <p class="font-bold text-right text-sm">รวมบิลนี้: <span class="total">0</span></p>`;
             document.getElementById('activeOrders').prepend(div);
             nameInput.value = ''; 
             updateUI();
@@ -109,7 +109,7 @@
 
         function addToCurrent(name, price) {
             let active = document.querySelector('.order-card');
-            if(!active) return alert("โปรดเปิดบิลก่อนครับ");
+            if(!active) return alert("โปรดกด '+' เพื่อเปิดบิลก่อนครับ");
             
             stats.total += price;
             stats.items++;
@@ -117,12 +117,12 @@
             let item = document.createElement('div');
             item.className = "flex justify-between bg-white px-2 py-1 my-1 rounded cursor-pointer text-xs";
             item.innerHTML = `<span>${name}</span><span>${price}</span>`;
+            // แก้ไขตรงนี้: คลิกแล้วลบแค่รายการในบิล ไม่ไปลด stats.total
             item.onclick = function() { 
                 this.remove(); 
-                stats.total -= price; 
-                stats.items--; 
-                active.querySelector('.total').innerText = parseInt(active.querySelector('.total').innerText) - price;
-                updateUI(); 
+                // ลบแค่ออกจากการแสดงผลในบิล ไม่ลบจาก stats.total และ stats.items
+                let bTotal = active.querySelector('.total');
+                bTotal.innerText = parseInt(bTotal.innerText) - price;
             };
             active.querySelector('.items').appendChild(item);
             active.querySelector('.total').innerText = parseInt(active.querySelector('.total').innerText) + price;
