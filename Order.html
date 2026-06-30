@@ -2,95 +2,88 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <title>ระบบออเดอร์วาฟเฟิล (บันทึกข้อมูลได้)</title>
+    <title>ระบบขายวาฟเฟิลรายวัน</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-50 p-4">
     <div class="max-w-md mx-auto bg-white p-5 rounded-2xl shadow-lg">
-        <h2 class="text-xl font-bold text-yellow-600 mb-4 text-center">จัดการออเดอร์วาฟเฟิล</h2>
-
-        <!-- ส่วนตั้งค่าเมนู -->
-        <div class="bg-yellow-50 p-3 rounded-lg mb-4 border border-yellow-200">
-            <input type="text" id="mName" placeholder="ชื่อเมนู" class="w-full p-1 mb-1 text-sm border rounded">
-            <input type="number" id="mPrice" placeholder="ราคา" class="w-full p-1 mb-1 text-sm border rounded">
-            <button onclick="saveMenu()" class="w-full bg-blue-500 text-white py-1 rounded text-sm font-bold">บันทึกเมนูใหม่</button>
+        <h2 class="text-xl font-bold text-center mb-4 text-gray-700">ยอดขายวันนี้: <span id="dailyTotal" class="text-green-600">0</span> บาท</h2>
+        
+        <div class="bg-gray-100 p-3 rounded-lg mb-4">
+            <input type="text" id="mName" placeholder="ชื่อเมนู" class="w-full p-1 mb-1 border rounded">
+            <input type="number" id="mPrice" placeholder="ราคา (15, 20, 25)" class="w-full p-1 mb-1 border rounded">
+            <button onclick="saveMenu()" class="w-full bg-blue-500 text-white py-1 rounded font-bold">บันทึกเมนู</button>
         </div>
 
         <div id="presetButtons" class="grid grid-cols-2 gap-2 mb-4"></div>
-
-        <!-- เปิดบิล -->
-        <div class="flex gap-2 mb-4">
-            <input type="text" id="cName" placeholder="ชื่อลูกค้า" class="flex-1 p-2 border rounded">
-            <button onclick="newOrder()" class="bg-green-600 text-white px-4 rounded font-bold">+</button>
-        </div>
-
+        <div class="flex gap-2 mb-4"><input type="text" id="cName" placeholder="ชื่อลูกค้า" class="flex-1 p-2 border rounded"><button onclick="newOrder()" class="bg-green-600 text-white px-4 rounded font-bold">+</button></div>
         <div id="activeOrders" class="space-y-4"></div>
     </div>
 
     <script>
-        // โหลดเมนูที่บันทึกไว้ตอนเริ่ม
+        let dailyTotal = 0;
+
         window.onload = () => {
             let menus = JSON.parse(localStorage.getItem('myMenus') || '[]');
             menus.forEach(m => createMenuBtn(m.name, m.price));
         };
 
-        function saveMenu() {
-            let n = document.getElementById('mName').value;
-            let p = document.getElementById('mPrice').value;
-            if(!n || !p) return;
-            
-            let menus = JSON.parse(localStorage.getItem('myMenus') || '[]');
-            menus.push({name: n, price: p});
-            localStorage.setItem('myMenus', JSON.stringify(menus));
-            
-            createMenuBtn(n, p);
-            document.getElementById('mName').value = '';
-            document.getElementById('mPrice').value = '';
+        function getColor(price) {
+            if (price == 15) return "bg-yellow-400";
+            if (price == 20) return "bg-green-500";
+            if (price == 25) return "bg-blue-500";
+            return "bg-gray-500";
         }
 
         function createMenuBtn(name, price) {
             let container = document.getElementById('presetButtons');
             let div = document.createElement('div');
-            div.className = "flex bg-yellow-500 text-white rounded text-sm overflow-hidden";
+            let color = getColor(price);
+            div.className = `${color} text-white rounded text-sm flex overflow-hidden`;
             div.innerHTML = `<button class="p-2 flex-1 text-left" onclick="addToCurrent('${name}', ${price})">${name}(${price})</button>
-                             <button class="bg-red-600 px-2" onclick="this.parentElement.remove(); deleteMenu('${name}')">x</button>`;
+                             <button class="bg-black/20 px-2" onclick="this.parentElement.remove(); deleteMenu('${name}')">x</button>`;
             container.appendChild(div);
         }
 
-        function deleteMenu(name) {
+        function saveMenu() {
+            let n = document.getElementById('mName').value;
+            let p = parseInt(document.getElementById('mPrice').value);
+            if(!n || !p) return;
             let menus = JSON.parse(localStorage.getItem('myMenus') || '[]');
-            menus = menus.filter(m => m.name !== name);
+            menus.push({name: n, price: p});
             localStorage.setItem('myMenus', JSON.stringify(menus));
+            createMenuBtn(n, p);
         }
 
         function newOrder() {
             let name = document.getElementById('cName').value || "ลูกค้าทั่วไป";
             let div = document.createElement('div');
             div.className = "border p-3 rounded-lg shadow-sm order-card";
-            div.innerHTML = `<div class="flex justify-between items-center mb-2">
-                                <h3 class="font-bold text-blue-700 underline cursor-pointer" onclick="this.contentEditable=true">ลูกค้า: ${name}</h3>
-                                <button class="text-red-500 text-xs" onclick="this.parentElement.parentElement.remove()">ลบบิล</button>
-                             </div>
-                             <div class="items"></div><p class="font-bold mt-2 text-right">รวม: <span class="total">0</span> บาท</p>`;
+            div.innerHTML = `<div class="flex justify-between items-center mb-2"><h3 class="font-bold text-blue-700 underline" contenteditable="true">ลูกค้า: ${name}</h3><button class="text-red-500 text-xs" onclick="this.parentElement.parentElement.remove()">ลบ</button></div><div class="items"></div><p class="font-bold mt-2 text-right">ยอดรวมบิล: <span class="total">0</span></p>`;
             document.getElementById('activeOrders').prepend(div);
             document.getElementById('cName').value = '';
         }
 
         function addToCurrent(name, price) {
             let active = document.querySelector('.order-card');
-            if(!active) return alert("โปรดเปิดบิลก่อนครับ");
-            
+            if(!active) return alert("เปิดบิลก่อนครับ");
             let item = document.createElement('div');
             item.className = "flex justify-between bg-gray-100 px-2 py-1 my-1 rounded text-sm cursor-pointer hover:bg-red-200";
             item.innerHTML = `<span>${name}</span><span>${price}</span>`;
             item.onclick = function() {
+                dailyTotal += price;
+                document.getElementById('dailyTotal').innerText = dailyTotal;
                 let totalSpan = active.querySelector('.total');
-                totalSpan.innerText = parseInt(totalSpan.innerText) - price;
+                totalSpan.innerText = parseInt(totalSpan.innerText) + price;
                 this.remove();
             };
             active.querySelector('.items').appendChild(item);
-            let totalSpan = active.querySelector('.total');
-            totalSpan.innerText = parseInt(totalSpan.innerText) + price;
+        }
+
+        function deleteMenu(name) {
+            let menus = JSON.parse(localStorage.getItem('myMenus') || '[]');
+            menus = menus.filter(m => m.name !== name);
+            localStorage.setItem('myMenus', JSON.stringify(menus));
         }
     </script>
 </body>
