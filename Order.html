@@ -22,23 +22,19 @@
             <button onclick="saveMenu()" class="w-full bg-blue-500 text-white py-1 rounded text-sm font-bold">บันทึกเมนู</button>
         </div>
 
-        <!-- รายการเมนูให้กด -->
         <div id="presetButtons" class="grid grid-cols-2 gap-2 mb-4"></div>
 
         <!-- เปิดบิล -->
-        <div class="flex gap-2 mb-4"><input type="text" id="cName" placeholder="ชื่อลูกค้า" class="flex-1 p-2 border rounded"><button onclick="newOrder()" class="bg-green-600 text-white px-4 rounded font-bold">+</button></div>
+        <div class="flex gap-2 mb-4">
+            <input type="text" id="cName" placeholder="ชื่อลูกค้า" class="flex-1 p-2 border rounded">
+            <button onclick="newOrder()" class="bg-green-600 text-white px-4 rounded font-bold">+</button>
+        </div>
         
         <div id="activeOrders" class="space-y-4 mb-6"></div>
-
-        <!-- ประวัติ -->
-        <div class="border-t pt-4">
-            <h3 class="font-bold mb-2 text-sm">ประวัติล่าสุด</h3>
-            <div id="historyList" class="text-xs text-gray-600 space-y-1"></div>
-        </div>
     </div>
 
     <script>
-        let stats = JSON.parse(localStorage.getItem('stats') || '{"total":0, "cust":0, "items":0, "history":[]}');
+        let stats = JSON.parse(localStorage.getItem('stats') || '{"total":0, "cust":0, "items":0}');
         
         window.onload = () => {
             let menus = JSON.parse(localStorage.getItem('myMenus') || '[]');
@@ -46,17 +42,11 @@
             updateUI();
         };
 
-        function getColor(p) {
-            if (p == 15) return "bg-yellow-400";
-            if (p == 20) return "bg-green-500";
-            if (p == 25) return "bg-blue-500";
-            return "bg-gray-500";
-        }
-
         function createMenuBtn(name, price) {
+            let color = (price == 15) ? "bg-yellow-400" : (price == 20) ? "bg-green-500" : (price == 25) ? "bg-blue-500" : "bg-gray-500";
             let container = document.getElementById('presetButtons');
             let div = document.createElement('div');
-            div.className = `${getColor(price)} text-white rounded text-sm flex overflow-hidden`;
+            div.className = `${color} text-white rounded text-sm flex overflow-hidden`;
             div.innerHTML = `<button class="p-2 flex-1 text-left truncate" onclick="addToCurrent('${name}', ${price})">${name}(${price})</button>
                              <button class="bg-black/20 px-2" onclick="this.parentElement.remove(); deleteMenu('${name}')">x</button>`;
             container.appendChild(div);
@@ -70,25 +60,33 @@
             menus.push({name: n, price: p});
             localStorage.setItem('myMenus', JSON.stringify(menus));
             createMenuBtn(n, p);
+            document.getElementById('mName').value = '';
+            document.getElementById('mPrice').value = '';
         }
 
         function updateUI() {
             document.getElementById('dailyTotal').innerText = stats.total + " บาท";
             document.getElementById('dailyCust').innerText = stats.cust;
             document.getElementById('dailyItems').innerText = stats.items;
-            let hist = document.getElementById('historyList');
-            hist.innerHTML = stats.history.slice(-5).map(h => `<div>${h}</div>`).join('');
             localStorage.setItem('stats', JSON.stringify(stats));
         }
 
         function newOrder() {
-            let name = document.getElementById('cName').value || "ลูกค้าทั่วไป";
+            let nameInput = document.getElementById('cName');
+            let name = nameInput.value || "ลูกค้าทั่วไป";
             stats.cust++;
+            
             let div = document.createElement('div');
             div.className = "border p-3 rounded-lg shadow-sm order-card bg-yellow-50";
-            div.innerHTML = `<h3 class="font-bold text-blue-700 text-sm">ลูกค้า: ${name}</h3><div class="items"></div><p class="font-bold text-right text-sm">รวม: <span class="total">0</span></p>`;
+            div.innerHTML = `
+                <div class="flex justify-between items-center mb-2">
+                    <h3 class="font-bold text-blue-700 text-sm">ลูกค้า: ${name}</h3>
+                    <button onclick="this.parentElement.parentElement.remove()" class="bg-red-500 text-white px-2 py-0.5 rounded text-xs">ลบออเดอร์นี้</button>
+                </div>
+                <div class="items"></div>
+                <p class="font-bold text-right text-sm">รวม: <span class="total">0</span></p>`;
             document.getElementById('activeOrders').prepend(div);
-            document.getElementById('cName').value = '';
+            nameInput.value = ''; 
             updateUI();
         }
 
@@ -98,14 +96,11 @@
             
             stats.total += price;
             stats.items++;
-            stats.history.push(`${name} (${price}บ.)`);
             
             let item = document.createElement('div');
             item.className = "flex justify-between bg-white px-2 py-1 my-1 rounded cursor-pointer text-xs";
             item.innerHTML = `<span>${name}</span><span>${price}</span>`;
-            item.onclick = function() {
-                this.remove();
-            };
+            item.onclick = function() { this.remove(); };
             active.querySelector('.items').appendChild(item);
             active.querySelector('.total').innerText = parseInt(active.querySelector('.total').innerText) + price;
             updateUI();
@@ -118,8 +113,8 @@
         }
 
         function clearDay() {
-            if(confirm("เริ่มวันใหม่? ยอดทั้งหมดจะถูกรีเซ็ต")) {
-                stats = {total:0, cust:0, items:0, history:[]};
+            if(confirm("เริ่มวันใหม่? ยอดขายจะถูกรีเซ็ตเป็น 0")) {
+                stats = {total:0, cust:0, items:0};
                 document.getElementById('activeOrders').innerHTML = '';
                 updateUI();
             }
