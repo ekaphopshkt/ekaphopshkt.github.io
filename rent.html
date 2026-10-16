@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>บริการเช่าตู้แช่ภูเก็ต (Phuket Freezer Rental)</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Prompt -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0284c7',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Prompt', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Prompt', sans-serif;
+        }
+        .glass-header {
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(12px);
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex flex-col justify-between selection:bg-cyan-500 selection:text-white">
+
+    <header class="sticky top-0 z-40 w-full border-b border-slate-200 glass-header shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-600 to-blue-600 flex items-center justify-center text-white shadow-md shadow-cyan-500/20">
+                    <i class="fa-solid font-bold fa-snowflake text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-slate-900 text-lg sm:text-xl leading-tight">เช่าตู้แช่ภูเก็ต</h1>
+                    <p class="text-xs text-slate-500 hidden sm:block">Phuket Freezer Rental Service</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <!-- Sync Status Badge -->
+                <span id="syncBadge" class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
+                    <span id="syncDot" class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                    <span id="syncText">ระบบเชื่อมต่อคลาวด์เรียบร้อย</span>
+                </span>
+
+                <!-- Admin Mode Toggle Button -->
+                <button id="toggleAdminBtn" onclick="window.toggleAdminMode()" class="px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-all duration-300 flex items-center gap-2 border shadow-sm">
+                    <span id="adminBadgeDot" class="w-2.5 h-2.5 rounded-full bg-slate-400"></span>
+                    <span id="adminBtnText" class="text-slate-700">เข้าสู่ระบบหลังบ้าน (Admin)</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Admin Indicator Banner -->
+    <div id="adminIndicatorBar" class="hidden bg-amber-500 text-slate-900 text-xs sm:text-sm font-semibold py-2.5 px-4 text-center shadow-inner flex items-center justify-center gap-2">
+        <i class="fa-solid fa-pen-to-square text-base"></i>
+        <span>คุณกำลังอยู่ใน <b>"โหมดผู้ดูแลระบบ (Admin Mode)"</b> - คุณสามารถแก้ไขราคา รูปภาพ และข้อมูลต่าง ๆ ได้ทันที</span>
+    </div>
+
+    <section class="relative bg-gradient-to-b from-cyan-900 via-slate-900 to-slate-900 text-white py-12 md:py-16 px-4 overflow-hidden">
+        <div class="absolute inset-0 opacity-10 bg-[radial-gradient(#38bdf8_1px,transparent_1px)] [background-size:16px_16px]"></div>
+        <div class="max-w-5xl mx-auto text-center relative z-10 space-y-4">
+            <span class="inline-block px-3.5 py-1 rounded-full text-xs font-semibold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+                <i class="fa-solid fa-truck-fast mr-1"></i> บริการส่งถึงที่ทั่วจังหวัดภูเก็ต
+            </span>
+            <h2 class="text-3xl md:text-5xl font-extrabold tracking-tight text-white leading-tight">
+                บริการให้เช่าตู้แช่แข็ง & ตู้แช่เครื่องดื่ม
+            </h2>
+            <p class="text-base md:text-lg text-slate-300 max-w-2xl mx-auto font-light">
+                สำหรับร้านอาหาร อีเวนต์ งานเลี้ยง และที่พักอาศัย ในจังหวัดภูเก็ต
+            </p>
+            <div class="pt-4 flex flex-wrap justify-center gap-3 text-xs sm:text-sm text-slate-300">
+                <div class="bg-slate-800/80 px-3.5 py-1.5 rounded-lg border border-slate-700 flex items-center gap-2">
+                    <i class="fa-solid fa-circle-check text-emerald-400"></i> สภาพใหม่สะอาดพร้อมใช้งาน
+                </div>
+                <div class="bg-slate-800/80 px-3.5 py-1.5 rounded-lg border border-slate-700 flex items-center gap-2">
+                    <i class="fa-solid fa-circle-check text-emerald-400"></i> จัดส่งด่วนทั่วภูเก็ต
+                </div>
+                <div class="bg-slate-800/80 px-3.5 py-1.5 rounded-lg border border-slate-700 flex items-center gap-2">
+                    <i class="fa-solid fa-circle-check text-emerald-400"></i> คืนมัดจำทันทีวันรับตู้คืน
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 space-y-12">
+
+        <!-- Service Pricing & Info Bar -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-start space-x-4 relative">
+                <div class="p-3.5 bg-blue-50 text-blue-600 rounded-xl text-2xl flex-shrink-0">
+                    <i class="fa-solid fa-truck-ramp-box"></i>
+                </div>
+                <div class="flex-grow">
+                    <div class="flex justify-between items-start">
+                        <h3 class="font-bold text-slate-900 text-base">ค่าบริการจัดส่ง (ไป-กลับ)</h3>
+                        <button onclick="window.openSettingsModal()" class="admin-only hidden text-xs bg-amber-100 hover:bg-amber-200 text-amber-900 px-2.5 py-1 rounded-lg font-medium transition">
+                            <i class="fa-solid fa-pen mr-1"></i>แก้ไขค่าบริการ
+                        </button>
+                    </div>
+                    <p id="displayDeliveryFee" class="text-2xl font-extrabold text-cyan-600 mt-1">3,000 <span class="text-sm font-normal text-slate-500">บาท (ทั่วภูเก็ต)</span></p>
+                    <p class="text-xs text-slate-500 mt-1">รวมบริการขนส่งทั้งรอบไปส่งและรอบรับตู้คืนเรียบร้อยแล้ว</p>
+                </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-start space-x-4 relative">
+                <div class="p-3.5 bg-emerald-50 text-emerald-600 rounded-xl text-2xl flex-shrink-0">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </div>
+                <div class="flex-grow">
+                    <div class="flex justify-between items-start">
+                        <h3 class="font-bold text-slate-900 text-base">เงินประกันความเสียหาย (มัดจำตู้)</h3>
+                        <button onclick="window.openSettingsModal()" class="admin-only hidden text-xs bg-amber-100 hover:bg-amber-200 text-amber-900 px-2.5 py-1 rounded-lg font-medium transition">
+                            <i class="fa-solid fa-pen mr-1"></i>แก้ไขค่ามัดจำ
+                        </button>
+                    </div>
+                    <p id="displayDepositFee" class="text-2xl font-extrabold text-emerald-600 mt-1">3,000 <span class="text-sm font-normal text-slate-500">บาท / ตู้</span></p>
+                    <p class="text-xs text-slate-500 mt-1">ได้รับคืนเต็มจำนวนทันที ณ วันรับตู้คืน เมื่อตรวจเช็กตู้เรียบร้อย</p>
+                </div>
+            </div>
+        </div>
+
+        <section id="products-section" class="space-y-6">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-900">รายละเอียดตู้แช่แต่ละรุ่น</h2>
+                    <p class="text-sm text-slate-500">เลือกรุ่นและขนาดตู้แช่ให้ตรงกับความต้องการของคุณ</p>
+                </div>
+
+                <!-- Admin Action Button / Filter Controls -->
+                <div class="flex items-center gap-3">
+                    <div class="inline-flex rounded-xl border border-slate-200 bg-slate-100 p-1 text-xs font-medium">
+                        <button onclick="window.filterProducts('all')" id="filter-all" class="filter-btn active rounded-lg px-3 py-1.5 bg-white text-slate-900 shadow-sm transition">ทั้งหมด</button>
+                        <button onclick="window.filterProducts('chest')" id="filter-chest" class="filter-btn rounded-lg px-3 py-1.5 text-slate-600 hover:text-slate-900 transition">ฝาทึบ</button>
+                        <button onclick="window.filterProducts('showcase')" id="filter-showcase" class="filter-btn rounded-lg px-3 py-1.5 text-slate-600 hover:text-slate-900 transition">ตู้กระจก</button>
+                    </div>
+
+                    <button id="addNewProductBtn" onclick="window.openAddProductModal()" class="admin-only hidden bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium px-4 py-2 rounded-xl shadow-sm transition duration-200 flex items-center gap-2">
+                        <i class="fa-solid fa-plus"></i>
+                        <span>เพิ่มตู้แช่รุ่นใหม่</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Product Cards Grid -->
+            <div id="productGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="col-span-full text-center py-12 text-slate-400">กำลังโหลดข้อมูลรายการตู้แช่...</div>
+            </div>
+        </section>
+
+        <section class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden space-y-4 p-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-4">
+                <div>
+                    <h2 class="text-xl font-bold text-slate-900 flex items-center gap-2">
+                        <i class="fa-solid fa-table text-cyan-600"></i> ตารางสรุปขนาดตู้และอัตราค่าเช่า
+                    </h2>
+                    <p class="text-xs text-slate-500 mt-1">เปรียบเทียบราคาค่าเช่าแต่ละรุ่นแบบรวดเร็ว</p>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto custom-scrollbar">
+                <table class="w-full text-left text-sm border-collapse min-w-[650px]">
+                    <thead>
+                        <tr class="bg-slate-50 border-y border-slate-200 text-slate-700 font-semibold">
+                            <th class="py-3.5 px-4">ขนาด / รุ่นตู้แช่</th>
+                            <th class="py-3.5 px-4 text-center">รายวัน</th>
+                            <th class="py-3.5 px-4 text-center">เหมา 10 วัน</th>
+                            <th class="py-3.5 px-4 text-center">เหมารายเดือน</th>
+                            <th class="py-3.5 px-4 text-center">ประเภท</th>
+                        </tr>
+                    </thead>
+                    <tbody id="summaryTableBody" class="divide-y divide-slate-100 text-slate-600">
+                        <!-- JS Rendered -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 rounded-2xl p-6 space-y-3">
+                <div class="flex items-center gap-2 text-amber-800 font-bold text-lg">
+                    <i class="fa-solid fa-triangle-exclamation text-amber-600 text-xl"></i>
+                    <h3>ข้อควรปฏิบัติสำคัญในการใช้งาน</h3>
+                </div>
+                <p class="text-sm text-amber-900/90 leading-relaxed">
+                    เมื่อขนส่งถึงหน้างาน <span class="font-bold text-amber-950 underline decoration-amber-500 underline-offset-2">ต้องตั้งตู้พักทิ้งไว้อย่างน้อย 2 ชั่วโมงก่อนเสียบปลั๊กใช้งาน</span> เพื่อให้ระบบน้ำมันคอมเพรสเซอร์เซ็ตตัว และป้องกันความเสียหายของระบบทำความเย็น
+                </p>
+            </div>
+
+            <div class="bg-slate-900 text-slate-200 rounded-2xl p-6 space-y-3">
+                <div class="flex items-center gap-2 text-white font-bold text-lg">
+                    <i class="fa-solid fa-clipboard-check text-cyan-400 text-xl"></i>
+                    <h3>เงื่อนไขและการรับตู้</h3>
+                </div>
+                <ul class="text-sm space-y-2.5 text-slate-300 list-disc list-inside">
+                    <li><span class="font-semibold text-white">การบันทึกสภาพตู้:</span> ทางเราจะร่วมถ่ายวิดีโอ / ภาพถ่ายบันทึกสภาพตู้กับลูกค้าก่อนส่งมอบทุกครั้ง</li>
+                    <li><span class="font-semibold text-white">การคืนเงินมัดจำ:</span> ได้รับคืนเต็มจำนวนทันที ณ วันรับตู้คืน เมื่อตรวจเช็กตู้เรียบร้อย</li>
+                    <li><span class="font-semibold text-white">การจัดส่ง:</span> บริการจัดส่งถึงหน้างาน ครอบคลุมทั่วจังหวัดภูเก็ต</li>
+                </ul>
+            </div>
+        </section>
+
+        <section id="contact" class="bg-gradient-to-r from-cyan-600 to-blue-600 rounded-3xl p-8 text-white shadow-xl text-center space-y-6 relative">
+            <button onclick="window.openSettingsModal()" class="admin-only hidden absolute top-4 right-4 bg-amber-400 hover:bg-amber-300 text-slate-900 text-xs font-bold px-3 py-1.5 rounded-xl shadow transition">
+                <i class="fa-solid fa-pen mr-1"></i>แก้ไขข้อมูลติดต่อ
+            </button>
+
+            <div class="max-w-2xl mx-auto space-y-2">
+                <h2 class="text-2xl sm:text-3xl font-extrabold">สนใจเช่าตู้แช่ หรือสอบถามคิวงาน</h2>
+                <p class="text-cyan-100 text-sm font-light">ติดต่อสั่งเช่าล่วงหน้าเพื่อสำรองคิวงาน จัดส่งตรงถึงหน้างานทั่วจังหวัดภูเก็ต</p>
+            </div>
+
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
+                <a id="contactPhoneBtn" href="tel:0812345678" class="w-full sm:w-auto bg-white text-slate-900 hover:bg-slate-100 font-bold px-6 py-3.5 rounded-2xl shadow-lg transition flex items-center justify-center gap-3">
+                    <i class="fa-solid fa-phone text-cyan-600 text-xl"></i>
+                    <span id="displayPhone">โทร / LINE: Person</span>
+                </a>
+                <a id="contactLineBtn" href="https://line.me" target="_blank" class="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-600 text-white font-bold px-6 py-3.5 rounded-2xl shadow-lg transition flex items-center justify-center gap-3">
+                    <i class="fa-brands fa-line text-2xl"></i>
+                    <span id="displayLine">LINE: @phuketfreezer</span>
+                </a>
+            </div>
+
+            <div class="pt-2 text-xs text-cyan-100/90 flex items-center justify-center gap-2">
+                <i class="fa-solid fa-location-dot"></i>
+                <span id="displayLocation">บริการจัดส่งถึงที่: ทั่วจังหวัดภูเก็ต</span>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-slate-900 border-t border-slate-800 py-6 text-center text-xs text-slate-500">
+        <p>© <span id="year"></span> บริการเช่าตู้แช่ภูเก็ต (Phuket Freezer Rental). All Rights Reserved.</p>
+    </footer>
+
+    <div id="productModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-100 p-6 space-y-4 custom-scrollbar">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <h3 id="modalTitle" class="text-lg font-bold text-slate-900">เพิ่มตู้แช่รุ่นใหม่</h3>
+                <button onclick="window.closeProductModal()" class="text-slate-400 hover:text-slate-600 text-2xl leading-none">&times;</button>
+            </div>
+
+            <form id="productForm" onsubmit="window.handleProductSubmit(event)" class="space-y-4">
+                <input type="hidden" id="editProductId" value="">
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">ชื่อรุ่น / ขนาดตู้แช่ *</label>
+                    <input type="text" id="prodName" required placeholder="เช่น 1. รุ่นจิ๋ว 3.5 คิว (ฝาทึบ)" class="w-full text-sm p-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-cyan-500 focus:outline-none">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">ความจุ / ขนาด คิว</label>
+                        <input type="text" id="prodCapacity" placeholder="เช่น 3.5 คิว" class="w-full text-sm p-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-cyan-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">ประเภทตู้แช่</label>
+                        <select id="prodType" class="w-full text-sm p-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-cyan-500 focus:outline-none">
+                            <option value="chest">ฝาทึบ (Chest Freezer)</option>
+                            <option value="showcase">ตู้กระจกทรงสูง (Showcase)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Image Selection / Upload Section -->
+                <div class="border border-slate-200 bg-slate-50 p-3.5 rounded-xl space-y-3">
+                    <label class="block text-xs font-bold text-slate-800">รูปภาพตู้แช่ (เลือกอัปโหลดไฟล์ หรือใส่ URL)</label>
+                    
+                    <div class="flex flex-col sm:flex-row gap-2 items-center">
+                        <!-- Browse / Upload File Input -->
+                        <label class="w-full sm:w-auto cursor-pointer bg-cyan-600 hover:bg-cyan-700 text-white text-xs font-medium px-3.5 py-2 rounded-lg transition flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-upload"></i>
+                            <span>เบราส์เลือกรูปจากเครื่อง</span>
+                            <input type="file" id="prodImageFile" accept="image/*" onchange="window.handleImageUpload(event)" class="hidden">
+                        </label>
+
+                        <span class="text-xs text-slate-400">หรือ</span>
+
+                        <input type="url" id="prodImage" placeholder="วางลิงก์รูปภาพ (https://...)" oninput="window.updateImagePreview()" class="w-full text-sm p-2 rounded-lg border border-slate-300 bg-white focus:ring-2 focus:ring-cyan-500 focus:outline-none">
+                    </div>
+
+                    <!-- Image Preview Container -->
+                    <div id="imagePreviewContainer" class="relative w-full h-40 bg-slate-200 rounded-lg overflow-hidden border border-slate-300 flex items-center justify-center">
+                        <img id="imagePreview" src="" alt="ตัวอย่างรูปภาพ" class="w-full h-full object-cover hidden">
+                        <div id="imagePreviewPlaceholder" class="text-xs text-slate-400 text-center p-2">
+                            <i class="fa-regular fa-image text-2xl block mb-1"></i>
+                            ยังไม่มีรูปภาพ (ระบบจะใช้น้ำหนักรูปเริ่มต้น)
+                        </div>
+                        <button type="button" onclick="window.clearSelectedImage()" id="clearImgBtn" class="hidden absolute top-2 right-2 bg-rose-600 text-white text-xs px-2 py-1 rounded-md shadow hover:bg-rose-700">
+                            ลบรูปออก
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Rental Prices Section -->
+                <div class="border-t border-slate-100 pt-3">
+                    <p class="text-xs font-bold text-slate-800 mb-2">กำหนดอัตราค่าเช่า (บาท)</p>
+                    <div class="grid grid-cols-3 gap-2">
+                        <div>
+                            <label class="block text-[11px] text-slate-600 mb-1">รายวัน (บาท/วัน)</label>
+                            <input type="number" id="prodDaily" required min="0" placeholder="300" class="w-full text-sm p-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-cyan-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] text-slate-600 mb-1">เหมา 10 วัน (บาท)</label>
+                            <input type="number" id="prodTenDays" required min="0" placeholder="1800" class="w-full text-sm p-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-cyan-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] text-slate-600 mb-1">รายเดือน (บาท/เดือน)</label>
+                            <input type="number" id="prodMonthly" required min="0" placeholder="3000" class="w-full text-sm p-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-cyan-500 focus:outline-none">
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">จุดเด่น</label>
+                    <input type="text" id="prodHighlight" placeholder="เช่น ขนาดกะทัดรัด ย้ายง่าย ประหยัดพื้นที่" class="w-full text-sm p-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-cyan-500 focus:outline-none">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">เหมาะสำหรับ</label>
+                    <input type="text" id="prodSuitable" placeholder="เช่น บูธขนาดเล็ก, แช่นมแม่, แช่สต็อกวัตถุดิบปริมาณไม่มาก" class="w-full text-sm p-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-cyan-500 focus:outline-none">
+                </div>
+
+                <div class="flex justify-end gap-2 pt-3 border-t border-slate-100">
+                    <button type="button" onclick="window.closeProductModal()" class="px-4 py-2 rounded-xl border border-slate-300 text-slate-700 text-sm hover:bg-slate-50 font-medium">ยกเลิก</button>
+                    <button type="submit" id="saveProductBtn" class="px-5 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white text-sm font-medium shadow-sm flex items-center gap-2">
+                        <span>บันทึกข้อมูลตู้แช่</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="settingsModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-100 p-6 space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <h3 class="text-lg font-bold text-slate-900">แก้ไขข้อมูลติดต่อ & ค่าบริการ</h3>
+                <button onclick="window.closeSettingsModal()" class="text-slate-400 hover:text-slate-600 text-2xl leading-none">&times;</button>
+            </div>
+
+            <form onsubmit="window.handleSettingsSubmit(event)" class="space-y-3">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">ข้อความโทร / LINE ติดต่อ</label>
+                    <input type="text" id="inputPhone" required placeholder="เช่น โทร / LINE: Person" class="w-full text-sm p-2.5 rounded-xl border border-slate-300">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">LINE ID</label>
+                    <input type="text" id="inputLine" required placeholder="เช่น @phuketfreezer" class="w-full text-sm p-2.5 rounded-xl border border-slate-300">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">พื้นที่ให้บริการ</label>
+                    <input type="text" id="inputLocation" required placeholder="เช่น ทั่วจังหวัดภูเก็ต" class="w-full text-sm p-2.5 rounded-xl border border-slate-300">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">ค่าบริการจัดส่ง ไป-กลับ (บาท)</label>
+                    <input type="number" id="inputDelivery" required min="0" class="w-full text-sm p-2.5 rounded-xl border border-slate-300">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">เงินประกันมัดจำ (บาท/ตู้)</label>
+                    <input type="number" id="inputDeposit" required min="0" class="w-full text-sm p-2.5 rounded-xl border border-slate-300">
+                </div>
+
+                <div class="flex justify-end gap-2 pt-3 border-t border-slate-100">
+                    <button type="button" onclick="window.closeSettingsModal()" class="px-4 py-2 rounded-xl border border-slate-300 text-slate-700 text-sm">ยกเลิก</button>
+                    <button type="submit" id="saveSettingsBtn" class="px-5 py-2 rounded-xl bg-cyan-600 text-white text-sm font-medium">บันทึกข้อมูล</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Notification Toast Message -->
+    <div id="toast" class="fixed bottom-5 right-5 z-50 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-xl flex items-center gap-3 transition-all duration-300 opacity-0 pointer-events-none transform translate-y-4">
+        <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400 text-lg"></i>
+        <span id="toastMessage" class="text-xs sm:text-sm">บันทึกข้อมูลเรียบร้อยแล้ว</span>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Firebase Setup with Environment Fallbacks
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'phuket-freezer-app';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+            apiKey: "demo-key",
+            authDomain: "demo.firebaseapp.com",
+            projectId: "demo-project",
+            storageBucket: "demo.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "1:123456789:web:demo"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let currentUser = null;
+        let isCloudAvailable = false;
+
+        // Default Data Set directly matching User Specification
+        const initialProducts = [
+            {
+                id: '1',
+                name: '1. รุ่นจิ๋ว 3.5 คิว (ฝาทึบ)',
+                capacity: '3.5 คิว',
+                type: 'chest',
+                dailyPrice: 300,
+                tenDaysPrice: 1800,
+                monthlyPrice: 3000,
+                highlight: 'ขนาดกะทัดรัด ย้ายง่าย ประหยัดพื้นที่',
+                suitable: 'บูธขนาดเล็ก, แช่นมแม่, แช่สต็อกวัตถุดิบปริมาณไม่มาก',
+                imageUrl: 'https://images.unsplash.com/photo-1584992236310-6edddc08acff?auto=format&fit=crop&w=600&q=80'
+            },
+            {
+                id: '2',
+                name: '2. รุ่นเล็ก 204 ลิตร (7.2 คิว / Hisense)',
+                capacity: '204 ลิตร (7.2 คิว)',
+                type: 'chest',
+                dailyPrice: 600,
+                tenDaysPrice: 3000,
+                monthlyPrice: 5000,
+                highlight: 'ความจุพอดี ประหยัดไฟ ทำความเย็นได้ดีเยี่ยม',
+                suitable: 'ร้านค้าขนาดเล็ก, ร้านอาหาร, งานอีเวนต์สั้นๆ 1-3 วัน',
+                imageUrl: 'https://images.unsplash.com/photo-1571175443880-49e1d25b2bc5?auto=format&fit=crop&w=600&q=80'
+            },
+            {
+                id: '3',
+                name: '3. รุ่นกลาง 305 ลิตร (10.7 คิว / Hisense)',
+                capacity: '305 ลิตร (10.7 คิว)',
+                type: 'chest',
+                dailyPrice: 800,
+                tenDaysPrice: 4000,
+                monthlyPrice: 6000,
+                highlight: 'จุของได้เยอะ จบในตู้เดียว คุ้มค่า',
+                suitable: 'ร้านอาหารทั่วไป, งานเลี้ยง, ร้านค้าที่ต้องการแช่ของสด/วัตถุดิบเพิ่ม',
+                imageUrl: 'https://images.unsplash.com/photo-1584992236310-6edddc08acff?auto=format&fit=crop&w=600&q=80'
+            },
+            {
+                id: '4',
+                name: '4. รุ่นใหญ่ 420 ลิตร (14.8 คิว / Hisense)',
+                capacity: '420 ลิตร (14.8 คิว)',
+                type: 'chest',
+                dailyPrice: 1000,
+                tenDaysPrice: 5000,
+                monthlyPrice: 7000,
+                highlight: 'ความจุสูงสุด จุวัตถุดิบและของแช่แข็งได้เต็มที่',
+                suitable: 'งานอีเวนต์ใหญ่, ร้านอาหารขนาดใหญ่, โรงแรม, งานจัดเลี้ยงขนาดใหญ่',
+                imageUrl: 'https://images.unsplash.com/photo-1571175443880-49e1d25b2bc5?auto=format&fit=crop&w=600&q=80'
+            },
+            {
+                id: '5',
+                name: '5. รุ่นตู้กระจกทรงสูง 1 ประตู (Haier)',
+                capacity: 'ทรงสูง 1 ประตู',
+                type: 'showcase',
+                dailyPrice: 1200,
+                tenDaysPrice: 6000,
+                monthlyPrice: 8500,
+                highlight: 'กระจกใสทรงสูง โชว์สินค้าสวยงาม มองเห็นสินค้าด้านในชัดเจน',
+                suitable: 'แช่เครื่องดื่ม, โชว์สินค้าขายหน้างาน, บูธแสดงสินค้า',
+                imageUrl: 'https://images.unsplash.com/photo-1626806819282-2c1dc01a5e0c?auto=format&fit=crop&w=600&q=80'
+            }
+        ];
+
+        window.state = {
+            isAdmin: false,
+            currentFilter: 'all',
+            deliveryFee: 3000,
+            depositFee: 3000,
+            phone: 'โทร / LINE: Person',
+            line: '@phuketfreezer',
+            location: 'ทั่วจังหวัดภูเก็ต',
+            products: []
+        };
+
+        async function ensureAuth() {
+            if (currentUser) return currentUser;
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    const res = await signInWithCustomToken(auth, __initial_auth_token);
+                    currentUser = res.user;
+                    isCloudAvailable = true;
+                } else {
+                    const res = await signInAnonymously(auth);
+                    currentUser = res.user;
+                    isCloudAvailable = true;
+                }
+            } catch (err) {
+                console.warn("Firebase Auth fallback active:", err);
+                currentUser = { uid: 'local-session-user' };
+                isCloudAvailable = false;
+            }
+            return currentUser;
+        }
+
+        function updateSyncBadge(status) {
+            const dot = document.getElementById('syncDot');
+            const text = document.getElementById('syncText');
+            if (!dot || !text) return;
+
+            if (status === 'cloud') {
+                dot.className = "w-2 h-2 rounded-full bg-emerald-500 animate-pulse";
+                text.innerText = "บันทึกและซิงค์คลาวด์แล้ว";
+            } else {
+                dot.className = "w-2 h-2 rounded-full bg-amber-500";
+                text.innerText = "บันทึกในเครื่อง (Local Mode)";
+            }
+        }
+
+        function loadFromLocalStorage() {
+            const savedProducts = localStorage.getItem('phuket_freezer_products_v2');
+            const savedSettings = localStorage.getItem('phuket_freezer_settings_v2');
+
+            if (savedProducts) {
+                try {
+                    window.state.products = JSON.parse(savedProducts);
+                } catch(e) {
+                    window.state.products = [...initialProducts];
+                }
+            } else {
+                window.state.products = [...initialProducts];
+            }
+
+            if (savedSettings) {
+                try {
+                    const settings = JSON.parse(savedSettings);
+                    window.state.deliveryFee = settings.deliveryFee ?? 3000;
+                    window.state.depositFee = settings.depositFee ?? 3000;
+                    window.state.phone = settings.phone || 'โทร / LINE: Person';
+                    window.state.line = settings.line || '@phuketfreezer';
+                    window.state.location = settings.location || 'ทั่วจังหวัดภูเก็ต';
+                } catch(e) {}
+            }
+        }
+
+        function saveToLocalStorage() {
+            try {
+                localStorage.setItem('phuket_freezer_products_v2', JSON.stringify(window.state.products));
+                localStorage.setItem('phuket_freezer_settings_v2', JSON.stringify({
+                    deliveryFee: window.state.deliveryFee,
+                    depositFee: window.state.depositFee,
+                    phone: window.state.phone,
+                    line: window.state.line,
+                    location: window.state.location
+                }));
+            } catch(e) {
+                console.error("Local storage error:", e);
+            }
+        }
+
+        function showToast(msg, type = 'success') {
+            const toast = document.getElementById('toast');
+            const messageEl = document.getElementById('toastMessage');
+            const icon = document.getElementById('toastIcon');
+
+            messageEl.innerText = msg;
+            if (type === 'success') {
+                icon.className = "fa-solid fa-circle-check text-emerald-400 text-lg";
+            } else {
+                icon.className = "fa-solid fa-triangle-exclamation text-amber-400 text-lg";
+            }
+
+            toast.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-4');
+            toast.classList.add('opacity-100', 'translate-y-0');
+
+            setTimeout(() => {
+                toast.classList.remove('opacity-100', 'translate-y-0');
+                toast.classList.add('opacity-0', 'pointer-events-none', 'translate-y-4');
+            }, 3000);
+        }
+
+        // Firestore Strict Path Strategy (RULE 1)
+        const productsCollectionRef = collection(db, 'artifacts', appId, 'public', 'data', 'products');
+        const settingsDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'general');
+
+        function setupRealtimeSync() {
+            if (!isCloudAvailable) {
+                loadFromLocalStorage();
+                renderProducts();
+                renderSummaryTable();
+                updateContactUI();
+                updateSyncBadge('local');
+                return;
+            }
+
+            // Products Realtime Firestore Sync
+            onSnapshot(productsCollectionRef, async (snapshot) => {
+                updateSyncBadge('cloud');
+                if (snapshot.empty) {
+                    for (const p of initialProducts) {
+                        const pDoc = doc(productsCollectionRef, p.id);
+                        await setDoc(pDoc, p);
+                    }
+                    return;
+                }
+
+                window.state.products = [];
+                snapshot.forEach(docSnap => {
+                    window.state.products.push({ id: docSnap.id, ...docSnap.data() });
+                });
+
+                // Sort Products numerically by ID or Name
+                window.state.products.sort((a,b) => (a.id > b.id ? 1 : -1));
+
+                saveToLocalStorage();
+                renderProducts();
+                renderSummaryTable();
+            }, (error) => {
+                console.warn("Firestore Notice:", error);
+                isCloudAvailable = false;
+                updateSyncBadge('local');
+                loadFromLocalStorage();
+                renderProducts();
+                renderSummaryTable();
+            });
+
+            // Settings Realtime Firestore Sync
+            onSnapshot(settingsDocRef, async (docSnap) => {
+                if (!docSnap.exists()) {
+                    await setDoc(settingsDocRef, {
+                        deliveryFee: 3000,
+                        depositFee: 3000,
+                        phone: 'โทร / LINE: Person',
+                        line: '@phuketfreezer',
+                        location: 'ทั่วจังหวัดภูเก็ต'
+                    });
+                    return;
+                }
+
+                const data = docSnap.data();
+                window.state.deliveryFee = data.deliveryFee ?? 3000;
+                window.state.depositFee = data.depositFee ?? 3000;
+                window.state.phone = data.phone || 'โทร / LINE: Person';
+                window.state.line = data.line || '@phuketfreezer';
+                window.state.location = data.location || 'ทั่วจังหวัดภูเก็ต';
+
+                saveToLocalStorage();
+                updateContactUI();
+            }, (error) => {
+                console.warn("Settings cloud sync fallback active.");
+            });
+        }
+
+        function updateContactUI() {
+            document.getElementById('displayPhone').innerText = window.state.phone;
+            document.getElementById('displayLine').innerText = `LINE: ${window.state.line}`;
+            document.getElementById('displayLocation').innerText = `บริการจัดส่งถึงที่: ${window.state.location}`;
+            
+            document.getElementById('displayDeliveryFee').innerHTML = `${window.state.deliveryFee.toLocaleString()} <span class="text-sm font-normal text-slate-500">บาท (ทั่วภูเก็ต)</span>`;
+            document.getElementById('displayDepositFee').innerHTML = `${window.state.depositFee.toLocaleString()} <span class="text-sm font-normal text-slate-500">บาท / ตู้</span>`;
+        }
+
+        // Admin Toggle
+        window.toggleAdminMode = function() {
+            window.state.isAdmin = !window.state.isAdmin;
+            updateAdminUI();
+            if (window.state.isAdmin) {
+                showToast("เข้าสู่โหมดผู้ดูแลระบบ (Admin) แล้ว");
+            }
+        };
+
+        function updateAdminUI() {
+            const btn = document.getElementById('toggleAdminBtn');
+            const dot = document.getElementById('adminBadgeDot');
+            const text = document.getElementById('adminBtnText');
+            const indicator = document.getElementById('adminIndicatorBar');
+            const adminElements = document.querySelectorAll('.admin-only');
+
+            if (window.state.isAdmin) {
+                btn.className = "px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold transition-all duration-300 flex items-center gap-2 bg-amber-500 text-slate-900 border-amber-600 shadow-md";
+                dot.className = "w-2.5 h-2.5 rounded-full bg-slate-900 animate-pulse";
+                text.innerText = "กำลังอยู่ในโหมด Admin (คลิกเพื่อปิด)";
+                indicator.classList.remove('hidden');
+                adminElements.forEach(el => el.classList.remove('hidden'));
+            } else {
+                btn.className = "px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-all duration-300 flex items-center gap-2 bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200 shadow-sm";
+                dot.className = "w-2.5 h-2.5 rounded-full bg-slate-400";
+                text.innerText = "เข้าสู่ระบบหลังบ้าน (Admin)";
+                indicator.classList.add('hidden');
+                adminElements.forEach(el => el.classList.add('hidden'));
+            }
+
+            renderProducts();
+            renderSummaryTable();
+        }
+
+        function renderProducts() {
+            const grid = document.getElementById('productGrid');
+            if (!grid) return;
+            grid.innerHTML = '';
+
+            const filtered = window.state.products.filter(p => {
+                if (window.state.currentFilter === 'all') return true;
+                return p.type === window.state.currentFilter;
+            });
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `<div class="col-span-full text-center py-12 text-slate-400">ไม่พบรายการตู้แช่ในหมวดหมู่นี้</div>`;
+                return;
+            }
+
+            filtered.forEach(p => {
+                const card = document.createElement('div');
+                card.className = "bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col justify-between transition duration-300 hover:shadow-lg hover:-translate-y-1 relative group";
+                
+                const chestFallback = 'https://images.unsplash.com/photo-1584992236310-6edddc08acff?auto=format&fit=crop&w=600&q=80';
+                const showcaseFallback = 'https://images.unsplash.com/photo-1626806819282-2c1dc01a5e0c?auto=format&fit=crop&w=600&q=80';
+                const defaultFallback = p.type === 'showcase' ? showcaseFallback : chestFallback;
+
+                const displayImg = (p.imageUrl && p.imageUrl.trim() !== '') ? p.imageUrl.trim() : defaultFallback;
+
+                card.innerHTML = `
+                    <div>
+                        <!-- Image Container with Fallback Support -->
+                        <div class="relative h-56 bg-slate-100 overflow-hidden">
+                            <img src="${displayImg}" 
+                                 alt="${p.name}" 
+                                 class="w-full h-full object-cover transition duration-500 group-hover:scale-105"
+                                 onerror="this.onerror=null; this.src='${defaultFallback}';">
+                            <span class="absolute top-3 left-3 bg-slate-900/80 backdrop-blur-sm text-white text-[11px] font-semibold px-2.5 py-1 rounded-full">
+                                ${p.type === 'showcase' ? 'ตู้กระจกทรงสูง' : 'ตู้แช่ฝาทึบ'}
+                            </span>
+
+                            ${window.state.isAdmin ? `
+                            <div class="absolute top-3 right-3 flex gap-1.5 bg-slate-900/85 backdrop-blur-md p-1 rounded-xl shadow-lg z-20">
+                                <button onclick="window.openEditProductModal('${p.id}')" class="px-2.5 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold text-xs transition flex items-center gap-1">
+                                    <i class="fa-solid fa-pen"></i> แก้ไข
+                                </button>
+                                <button onclick="window.deleteProduct('${p.id}')" class="w-8 h-8 rounded-lg bg-rose-600 hover:bg-rose-500 text-white flex items-center justify-center text-xs transition" title="ลบ">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </div>
+                            ` : ''}
+                        </div>
+
+                        <!-- Card Details -->
+                        <div class="p-5 space-y-3">
+                            <h3 class="font-bold text-slate-900 text-lg leading-snug">${p.name}</h3>
+
+                            <div class="space-y-1.5 text-xs text-slate-600">
+                                <p class="flex items-start gap-1.5">
+                                    <i class="fa-solid fa-star text-amber-500 mt-0.5 flex-shrink-0"></i>
+                                    <span><strong class="text-slate-800">จุดเด่น:</strong> ${p.highlight || '-'}</span>
+                                </p>
+                                <p class="flex items-start gap-1.5">
+                                    <i class="fa-solid fa-circle-check text-emerald-500 mt-0.5 flex-shrink-0"></i>
+                                    <span><strong class="text-slate-800">เหมาะสำหรับ:</strong> ${p.suitable || '-'}</span>
+                                </p>
+                            </div>
+
+                            <!-- Pricing Grid -->
+                            <div class="bg-slate-50 p-3 rounded-xl border border-slate-200/80 grid grid-cols-3 gap-1 text-center mt-2">
+                                <div>
+                                    <span class="block text-[10px] text-slate-400 font-medium uppercase">รายวัน</span>
+                                    <span class="font-bold text-cyan-600 text-sm">${(p.dailyPrice || 0).toLocaleString()}</span>
+                                    <span class="text-[10px] text-slate-500">บ./วัน</span>
+                                </div>
+                                <div class="border-x border-slate-200">
+                                    <span class="block text-[10px] text-slate-400 font-medium uppercase">เหมา 10 วัน</span>
+                                    <span class="font-bold text-slate-800 text-sm">${(p.tenDaysPrice || 0).toLocaleString()}</span>
+                                    <span class="text-[10px] text-slate-500">บาท</span>
+                                </div>
+                                <div>
+                                    <span class="block text-[10px] text-slate-400 font-medium uppercase">เหมารายเดือน</span>
+                                    <span class="font-bold text-emerald-600 text-sm">${(p.monthlyPrice || 0).toLocaleString()}</span>
+                                    <span class="text-[10px] text-slate-500">บ./เดือน</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Contact CTA -->
+                    <div class="p-5 pt-0">
+                        <a href="#contact" class="w-full bg-slate-100 hover:bg-cyan-600 hover:text-white text-slate-700 font-medium text-xs py-2.5 rounded-xl transition flex items-center justify-center gap-2">
+                            <i class="fa-regular fa-calendar-check"></i>
+                            <span>สอบถามคิวเช่าตู้รุ่นนี้</span>
+                        </a>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function renderSummaryTable() {
+            const tbody = document.getElementById('summaryTableBody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            window.state.products.forEach(p => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 transition border-b border-slate-100";
+                tr.innerHTML = `
+                    <td class="py-3 px-4 font-semibold text-slate-900">${p.name}</td>
+                    <td class="py-3 px-4 text-center font-bold text-cyan-600">${(p.dailyPrice || 0).toLocaleString()} บาท/วัน</td>
+                    <td class="py-3 px-4 text-center font-bold text-slate-800">${(p.tenDaysPrice || 0).toLocaleString()} บาท</td>
+                    <td class="py-3 px-4 text-center font-bold text-emerald-600">${(p.monthlyPrice || 0).toLocaleString()} บาท/เดือน</td>
+                    <td class="py-3 px-4 text-center">
+                        <span class="px-2.5 py-1 rounded-full text-xs font-medium ${p.type === 'showcase' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}">
+                            ${p.type === 'showcase' ? 'ตู้กระจก' : 'ฝาทึบ'}
+                        </span>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Image Browsing / File Upload Processing (Base64 encoding for reliable persistence)
+        window.handleImageUpload = function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                const base64Img = evt.target.result;
+                document.getElementById('prodImage').value = base64Img;
+                window.updateImagePreview();
+            };
+            reader.readAsDataURL(file);
+        };
+
+        window.updateImagePreview = function() {
+            const imgUrl = document.getElementById('prodImage').value.trim();
+            const preview = document.getElementById('imagePreview');
+            const placeholder = document.getElementById('imagePreviewPlaceholder');
+            const clearBtn = document.getElementById('clearImgBtn');
+
+            if (imgUrl) {
+                preview.src = imgUrl;
+                preview.classList.remove('hidden');
+                placeholder.classList.add('hidden');
+                clearBtn.classList.remove('hidden');
+            } else {
+                preview.src = '';
+                preview.classList.add('hidden');
+                placeholder.classList.remove('hidden');
+                clearBtn.classList.add('hidden');
+            }
+        };
+
+        window.clearSelectedImage = function() {
+            document.getElementById('prodImage').value = '';
+            document.getElementById('prodImageFile').value = '';
+            window.updateImagePreview();
+        };
+
+        window.openAddProductModal = function() {
+            document.getElementById('modalTitle').innerText = 'เพิ่มตู้แช่รุ่นใหม่';
+            document.getElementById('editProductId').value = '';
+            document.getElementById('productForm').reset();
+            window.clearSelectedImage();
+            document.getElementById('productModal').classList.remove('hidden');
+        };
+
+        window.openEditProductModal = function(id) {
+            const p = window.state.products.find(item => item.id === id);
+            if (!p) return;
+
+            document.getElementById('modalTitle').innerText = 'แก้ไขข้อมูลตู้แช่';
+            document.getElementById('editProductId').value = p.id;
+            document.getElementById('prodName').value = p.name || '';
+            document.getElementById('prodCapacity').value = p.capacity || '';
+            document.getElementById('prodType').value = p.type || 'chest';
+            document.getElementById('prodImage').value = p.imageUrl || '';
+            document.getElementById('prodDaily').value = p.dailyPrice || 0;
+            document.getElementById('prodTenDays').value = p.tenDaysPrice || 0;
+            document.getElementById('prodMonthly').value = p.monthlyPrice || 0;
+            document.getElementById('prodHighlight').value = p.highlight || '';
+            document.getElementById('prodSuitable').value = p.suitable || '';
+
+            window.updateImagePreview();
+            document.getElementById('productModal').classList.remove('hidden');
+        };
+
+        window.closeProductModal = function() {
+            document.getElementById('productModal').classList.add('hidden');
+        };
+
+        window.handleProductSubmit = async function(e) {
+            e.preventDefault();
+
+            const saveBtn = document.getElementById('saveProductBtn');
+            const originalText = saveBtn.innerHTML;
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> <span>กำลังบันทึก...</span>`;
+
+            const editId = document.getElementById('editProductId').value;
+            const targetId = editId || Date.now().toString();
+
+            const productData = {
+                id: targetId,
+                name: document.getElementById('prodName').value,
+                capacity: document.getElementById('prodCapacity').value,
+                type: document.getElementById('prodType').value,
+                imageUrl: document.getElementById('prodImage').value.trim(),
+                dailyPrice: parseFloat(document.getElementById('prodDaily').value) || 0,
+                tenDaysPrice: parseFloat(document.getElementById('prodTenDays').value) || 0,
+                monthlyPrice: parseFloat(document.getElementById('prodMonthly').value) || 0,
+                highlight: document.getElementById('prodHighlight').value,
+                suitable: document.getElementById('prodSuitable').value
+            };
+
+            // Local Memory Update First
+            const existingIdx = window.state.products.findIndex(p => p.id === targetId);
+            if (existingIdx >= 0) {
+                window.state.products[existingIdx] = productData;
+            } else {
+                window.state.products.push(productData);
+            }
+
+            saveToLocalStorage();
+            renderProducts();
+            renderSummaryTable();
+
+            // Attempt Cloud Persistence (Firestore)
+            try {
+                await ensureAuth();
+                if (isCloudAvailable) {
+                    const targetDocRef = doc(productsCollectionRef, targetId);
+                    await setDoc(targetDocRef, productData, { merge: true });
+                }
+                window.closeProductModal();
+                showToast(editId ? "อัปเดตข้อมูลตู้แช่เรียบร้อย!" : "เพิ่มตู้แช่รุ่นใหม่เรียบร้อย!");
+            } catch (err) {
+                console.warn("Cloud save fallback to local:", err);
+                window.closeProductModal();
+                showToast("บันทึกข้อมูลเรียบร้อยแล้ว!");
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = originalText;
+            }
+        };
+
+        window.deleteProduct = async function(id) {
+            if (!confirm('คุณแน่ใจหรือไม่ว่าต้องการลบรายการตู้แช่นี้?')) return;
+
+            window.state.products = window.state.products.filter(p => p.id !== id);
+            saveToLocalStorage();
+            renderProducts();
+            renderSummaryTable();
+
+            try {
+                await ensureAuth();
+                if (isCloudAvailable) {
+                    const targetDocRef = doc(productsCollectionRef, id);
+                    await deleteDoc(targetDocRef);
+                }
+                showToast("ลบรายการตู้แช่ออกจากระบบแล้ว");
+            } catch (err) {
+                console.warn("Cloud delete notice:", err);
+                showToast("ลบรายการตู้แช่เรียบร้อยแล้ว");
+            }
+        };
+
+        window.openSettingsModal = function() {
+            document.getElementById('inputPhone').value = window.state.phone;
+            document.getElementById('inputLine').value = window.state.line;
+            document.getElementById('inputLocation').value = window.state.location;
+            document.getElementById('inputDelivery').value = window.state.deliveryFee;
+            document.getElementById('inputDeposit').value = window.state.depositFee;
+            document.getElementById('settingsModal').classList.remove('hidden');
+        };
+
+        window.closeSettingsModal = function() {
+            document.getElementById('settingsModal').classList.add('hidden');
+        };
+
+        window.handleSettingsSubmit = async function(e) {
+            e.preventDefault();
+
+            const saveBtn = document.getElementById('saveSettingsBtn');
+            saveBtn.disabled = true;
+            saveBtn.innerText = 'กำลังบันทึก...';
+
+            const updatedSettings = {
+                phone: document.getElementById('inputPhone').value,
+                line: document.getElementById('inputLine').value,
+                location: document.getElementById('inputLocation').value,
+                deliveryFee: parseFloat(document.getElementById('inputDelivery').value) || 0,
+                depositFee: parseFloat(document.getElementById('inputDeposit').value) || 0
+            };
+
+            window.state.phone = updatedSettings.phone;
+            window.state.line = updatedSettings.line;
+            window.state.location = updatedSettings.location;
+            window.state.deliveryFee = updatedSettings.deliveryFee;
+            window.state.depositFee = updatedSettings.depositFee;
+
+            saveToLocalStorage();
+            updateContactUI();
+
+            try {
+                await ensureAuth();
+                if (isCloudAvailable) {
+                    await setDoc(settingsDocRef, updatedSettings, { merge: true });
+                }
+                window.closeSettingsModal();
+                showToast("บันทึกข้อมูลติดต่อและค่าบริการเรียบร้อย!");
+            } catch (err) {
+                console.warn("Cloud settings notice:", err);
+                window.closeSettingsModal();
+                showToast("บันทึกข้อมูลเรียบร้อยแล้ว!");
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.innerText = 'บันทึกข้อมูล';
+            }
+        };
+
+        window.filterProducts = function(type) {
+            window.state.currentFilter = type;
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('bg-white', 'text-slate-900', 'shadow-sm');
+                btn.classList.add('text-slate-600');
+            });
+            const activeBtn = document.getElementById(`filter-${type}`);
+            if (activeBtn) {
+                activeBtn.classList.add('bg-white', 'text-slate-900', 'shadow-sm');
+                activeBtn.classList.remove('text-slate-600');
+            }
+            renderProducts();
+        };
+
+        // Initial Boot
+        window.onload = async function() {
+            document.getElementById('year').innerText = new Date().getFullYear();
+            
+            loadFromLocalStorage();
+            renderProducts();
+            renderSummaryTable();
+            updateContactUI();
+
+            await ensureAuth();
+            setupRealtimeSync();
+        };
+    </script>
+</body>
+</html>
