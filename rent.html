@@ -13,6 +13,15 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        window.firebaseApp = { initializeApp, getAuth, signInAnonymously, signInWithCustomToken, getFirestore, doc, setDoc, onSnapshot };
+    </script>
+
     <script>
         tailwind.config = {
             theme: {
@@ -76,13 +85,13 @@
 
             <div class="flex items-center gap-3">
                 <!-- Sync Status Badge -->
-                <span id="syncBadge" class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
-                    <span id="syncDot" class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                    <span id="syncText">ระบบเชื่อมต่อคลาวด์เรียบร้อย</span>
+                <span id="syncBadge" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span id="syncBadgeText">ระบบพร้อมใช้งาน (ซิงก์คลาวด์)</span>
                 </span>
 
                 <!-- Admin Mode Toggle Button -->
-                <button id="toggleAdminBtn" onclick="window.toggleAdminMode()" class="px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-all duration-300 flex items-center gap-2 border shadow-sm">
+                <button id="toggleAdminBtn" onclick="toggleAdminMode()" class="px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-all duration-300 flex items-center gap-2 border shadow-sm">
                     <span id="adminBadgeDot" class="w-2.5 h-2.5 rounded-full bg-slate-400"></span>
                     <span id="adminBtnText" class="text-slate-700">เข้าสู่ระบบหลังบ้าน (Admin)</span>
                 </button>
@@ -90,10 +99,9 @@
         </div>
     </header>
 
-    <!-- Admin Indicator Banner -->
     <div id="adminIndicatorBar" class="hidden bg-amber-500 text-slate-900 text-xs sm:text-sm font-semibold py-2.5 px-4 text-center shadow-inner flex items-center justify-center gap-2">
         <i class="fa-solid fa-pen-to-square text-base"></i>
-        <span>คุณกำลังอยู่ใน <b>"โหมดผู้ดูแลระบบ (Admin Mode)"</b> - คุณสามารถแก้ไขราคา รูปภาพ และข้อมูลต่าง ๆ ได้ทันที</span>
+        <span>คุณกำลังอยู่ใน <b>"โหมดผู้ดูแลระบบ (Admin Mode)"</b> - ทุกการแก้ไขจะถูกบันทึกและแชร์ให้ทุกคนเห็นอัตโนมัติ</span>
     </div>
 
     <section class="relative bg-gradient-to-b from-cyan-900 via-slate-900 to-slate-900 text-white py-12 md:py-16 px-4 overflow-hidden">
@@ -133,7 +141,7 @@
                 <div class="flex-grow">
                     <div class="flex justify-between items-start">
                         <h3 class="font-bold text-slate-900 text-base">ค่าบริการจัดส่ง (ไป-กลับ)</h3>
-                        <button onclick="window.openSettingsModal()" class="admin-only hidden text-xs bg-amber-100 hover:bg-amber-200 text-amber-900 px-2.5 py-1 rounded-lg font-medium transition">
+                        <button onclick="openSettingsModal()" class="admin-only hidden text-xs bg-amber-100 hover:bg-amber-200 text-amber-900 px-2.5 py-1 rounded-lg font-medium transition">
                             <i class="fa-solid fa-pen mr-1"></i>แก้ไขค่าบริการ
                         </button>
                     </div>
@@ -149,7 +157,7 @@
                 <div class="flex-grow">
                     <div class="flex justify-between items-start">
                         <h3 class="font-bold text-slate-900 text-base">เงินประกันความเสียหาย (มัดจำตู้)</h3>
-                        <button onclick="window.openSettingsModal()" class="admin-only hidden text-xs bg-amber-100 hover:bg-amber-200 text-amber-900 px-2.5 py-1 rounded-lg font-medium transition">
+                        <button onclick="openSettingsModal()" class="admin-only hidden text-xs bg-amber-100 hover:bg-amber-200 text-amber-900 px-2.5 py-1 rounded-lg font-medium transition">
                             <i class="fa-solid fa-pen mr-1"></i>แก้ไขค่ามัดจำ
                         </button>
                     </div>
@@ -166,24 +174,24 @@
                     <p class="text-sm text-slate-500">เลือกรุ่นและขนาดตู้แช่ให้ตรงกับความต้องการของคุณ</p>
                 </div>
 
-                <!-- Admin Action Button / Filter Controls -->
+                <!-- Filter Controls & Admin Add Button -->
                 <div class="flex items-center gap-3">
                     <div class="inline-flex rounded-xl border border-slate-200 bg-slate-100 p-1 text-xs font-medium">
-                        <button onclick="window.filterProducts('all')" id="filter-all" class="filter-btn active rounded-lg px-3 py-1.5 bg-white text-slate-900 shadow-sm transition">ทั้งหมด</button>
-                        <button onclick="window.filterProducts('chest')" id="filter-chest" class="filter-btn rounded-lg px-3 py-1.5 text-slate-600 hover:text-slate-900 transition">ฝาทึบ</button>
-                        <button onclick="window.filterProducts('showcase')" id="filter-showcase" class="filter-btn rounded-lg px-3 py-1.5 text-slate-600 hover:text-slate-900 transition">ตู้กระจก</button>
+                        <button onclick="filterProducts('all')" id="filter-all" class="filter-btn active rounded-lg px-3 py-1.5 bg-white text-slate-900 shadow-sm transition">ทั้งหมด</button>
+                        <button onclick="filterProducts('chest')" id="filter-chest" class="filter-btn rounded-lg px-3 py-1.5 text-slate-600 hover:text-slate-900 transition">ฝาทึบ</button>
+                        <button onclick="filterProducts('showcase')" id="filter-showcase" class="filter-btn rounded-lg px-3 py-1.5 text-slate-600 hover:text-slate-900 transition">ตู้กระจก</button>
                     </div>
 
-                    <button id="addNewProductBtn" onclick="window.openAddProductModal()" class="admin-only hidden bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium px-4 py-2 rounded-xl shadow-sm transition duration-200 flex items-center gap-2">
+                    <button id="addNewProductBtn" onclick="openAddProductModal()" class="admin-only hidden bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium px-4 py-2 rounded-xl shadow-sm transition duration-200 flex items-center gap-2">
                         <i class="fa-solid fa-plus"></i>
                         <span>เพิ่มตู้แช่รุ่นใหม่</span>
                     </button>
                 </div>
             </div>
 
-            <!-- Product Cards Grid -->
+            <!-- Product Cards Grid Container -->
             <div id="productGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div class="col-span-full text-center py-12 text-slate-400">กำลังโหลดข้อมูลรายการตู้แช่...</div>
+                <!-- JS Rendered -->
             </div>
         </section>
 
@@ -240,7 +248,7 @@
         </section>
 
         <section id="contact" class="bg-gradient-to-r from-cyan-600 to-blue-600 rounded-3xl p-8 text-white shadow-xl text-center space-y-6 relative">
-            <button onclick="window.openSettingsModal()" class="admin-only hidden absolute top-4 right-4 bg-amber-400 hover:bg-amber-300 text-slate-900 text-xs font-bold px-3 py-1.5 rounded-xl shadow transition">
+            <button onclick="openSettingsModal()" class="admin-only hidden absolute top-4 right-4 bg-amber-400 hover:bg-amber-300 text-slate-900 text-xs font-bold px-3 py-1.5 rounded-xl shadow transition">
                 <i class="fa-solid fa-pen mr-1"></i>แก้ไขข้อมูลติดต่อ
             </button>
 
@@ -276,10 +284,10 @@
         <div class="bg-white rounded-2xl max-w-xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-100 p-6 space-y-4 custom-scrollbar">
             <div class="flex justify-between items-center border-b border-slate-100 pb-3">
                 <h3 id="modalTitle" class="text-lg font-bold text-slate-900">เพิ่มตู้แช่รุ่นใหม่</h3>
-                <button onclick="window.closeProductModal()" class="text-slate-400 hover:text-slate-600 text-2xl leading-none">&times;</button>
+                <button onclick="closeProductModal()" class="text-slate-400 hover:text-slate-600 text-2xl leading-none">&times;</button>
             </div>
 
-            <form id="productForm" onsubmit="window.handleProductSubmit(event)" class="space-y-4">
+            <form id="productForm" onsubmit="handleProductSubmit(event)" class="space-y-4">
                 <input type="hidden" id="editProductId" value="">
 
                 <div>
@@ -306,26 +314,24 @@
                     <label class="block text-xs font-bold text-slate-800">รูปภาพตู้แช่ (เลือกอัปโหลดไฟล์ หรือใส่ URL)</label>
                     
                     <div class="flex flex-col sm:flex-row gap-2 items-center">
-                        <!-- Browse / Upload File Input -->
                         <label class="w-full sm:w-auto cursor-pointer bg-cyan-600 hover:bg-cyan-700 text-white text-xs font-medium px-3.5 py-2 rounded-lg transition flex items-center justify-center gap-2">
                             <i class="fa-solid fa-upload"></i>
-                            <span>เบราส์เลือกรูปจากเครื่อง</span>
-                            <input type="file" id="prodImageFile" accept="image/*" onchange="window.handleImageUpload(event)" class="hidden">
+                            <span>เลือกรูปจากเครื่อง</span>
+                            <input type="file" id="prodImageFile" accept="image/*" onchange="handleImageUpload(event)" class="hidden">
                         </label>
 
                         <span class="text-xs text-slate-400">หรือ</span>
 
-                        <input type="url" id="prodImage" placeholder="วางลิงก์รูปภาพ (https://...)" oninput="window.updateImagePreview()" class="w-full text-sm p-2 rounded-lg border border-slate-300 bg-white focus:ring-2 focus:ring-cyan-500 focus:outline-none">
+                        <input type="url" id="prodImage" placeholder="วางลิงก์รูปภาพ (https://...)" oninput="updateImagePreview()" class="w-full text-sm p-2 rounded-lg border border-slate-300 bg-white focus:ring-2 focus:ring-cyan-500 focus:outline-none">
                     </div>
 
-                    <!-- Image Preview Container -->
                     <div id="imagePreviewContainer" class="relative w-full h-40 bg-slate-200 rounded-lg overflow-hidden border border-slate-300 flex items-center justify-center">
                         <img id="imagePreview" src="" alt="ตัวอย่างรูปภาพ" class="w-full h-full object-cover hidden">
                         <div id="imagePreviewPlaceholder" class="text-xs text-slate-400 text-center p-2">
                             <i class="fa-regular fa-image text-2xl block mb-1"></i>
-                            ยังไม่มีรูปภาพ (ระบบจะใช้น้ำหนักรูปเริ่มต้น)
+                            ยังไม่มีรูปภาพ (ระบบจะใช้รูปเริ่มต้น)
                         </div>
-                        <button type="button" onclick="window.clearSelectedImage()" id="clearImgBtn" class="hidden absolute top-2 right-2 bg-rose-600 text-white text-xs px-2 py-1 rounded-md shadow hover:bg-rose-700">
+                        <button type="button" onclick="clearSelectedImage()" id="clearImgBtn" class="hidden absolute top-2 right-2 bg-rose-600 text-white text-xs px-2 py-1 rounded-md shadow hover:bg-rose-700">
                             ลบรูปออก
                         </button>
                     </div>
@@ -361,7 +367,7 @@
                 </div>
 
                 <div class="flex justify-end gap-2 pt-3 border-t border-slate-100">
-                    <button type="button" onclick="window.closeProductModal()" class="px-4 py-2 rounded-xl border border-slate-300 text-slate-700 text-sm hover:bg-slate-50 font-medium">ยกเลิก</button>
+                    <button type="button" onclick="closeProductModal()" class="px-4 py-2 rounded-xl border border-slate-300 text-slate-700 text-sm hover:bg-slate-50 font-medium">ยกเลิก</button>
                     <button type="submit" id="saveProductBtn" class="px-5 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white text-sm font-medium shadow-sm flex items-center gap-2">
                         <span>บันทึกข้อมูลตู้แช่</span>
                     </button>
@@ -370,14 +376,15 @@
         </div>
     </div>
 
+    <!-- Settings Modal -->
     <div id="settingsModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-100 p-6 space-y-4">
             <div class="flex justify-between items-center border-b border-slate-100 pb-3">
                 <h3 class="text-lg font-bold text-slate-900">แก้ไขข้อมูลติดต่อ & ค่าบริการ</h3>
-                <button onclick="window.closeSettingsModal()" class="text-slate-400 hover:text-slate-600 text-2xl leading-none">&times;</button>
+                <button onclick="closeSettingsModal()" class="text-slate-400 hover:text-slate-600 text-2xl leading-none">&times;</button>
             </div>
 
-            <form onsubmit="window.handleSettingsSubmit(event)" class="space-y-3">
+            <form onsubmit="handleSettingsSubmit(event)" class="space-y-3">
                 <div>
                     <label class="block text-xs font-semibold text-slate-700 mb-1">ข้อความโทร / LINE ติดต่อ</label>
                     <input type="text" id="inputPhone" required placeholder="เช่น โทร / LINE: Person" class="w-full text-sm p-2.5 rounded-xl border border-slate-300">
@@ -400,7 +407,7 @@
                 </div>
 
                 <div class="flex justify-end gap-2 pt-3 border-t border-slate-100">
-                    <button type="button" onclick="window.closeSettingsModal()" class="px-4 py-2 rounded-xl border border-slate-300 text-slate-700 text-sm">ยกเลิก</button>
+                    <button type="button" onclick="closeSettingsModal()" class="px-4 py-2 rounded-xl border border-slate-300 text-slate-700 text-sm">ยกเลิก</button>
                     <button type="submit" id="saveSettingsBtn" class="px-5 py-2 rounded-xl bg-cyan-600 text-white text-sm font-medium">บันทึกข้อมูล</button>
                 </div>
             </form>
@@ -413,30 +420,7 @@
         <span id="toastMessage" class="text-xs sm:text-sm">บันทึกข้อมูลเรียบร้อยแล้ว</span>
     </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        // Firebase Setup with Environment Fallbacks
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'phuket-freezer-app';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
-            apiKey: "demo-key",
-            authDomain: "demo.firebaseapp.com",
-            projectId: "demo-project",
-            storageBucket: "demo.appspot.com",
-            messagingSenderId: "123456789",
-            appId: "1:123456789:web:demo"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-
-        let currentUser = null;
-        let isCloudAvailable = false;
-
-        // Default Data Set directly matching User Specification
+    <script>
         const initialProducts = [
             {
                 id: '1',
@@ -452,7 +436,7 @@
             },
             {
                 id: '2',
-                name: '2. รุ่นเล็ก 204 ลิตร (7.2 คิว / Hisense)',
+                name: '2. รุ่นเล็ก 204 ลิตร (7.2 คิว)',
                 capacity: '204 ลิตร (7.2 คิว)',
                 type: 'chest',
                 dailyPrice: 600,
@@ -464,7 +448,7 @@
             },
             {
                 id: '3',
-                name: '3. รุ่นกลาง 305 ลิตร (10.7 คิว / Hisense)',
+                name: '3. รุ่นกลาง 305 ลิตร (10.7 คิว)',
                 capacity: '305 ลิตร (10.7 คิว)',
                 type: 'chest',
                 dailyPrice: 800,
@@ -476,7 +460,7 @@
             },
             {
                 id: '4',
-                name: '4. รุ่นใหญ่ 420 ลิตร (14.8 คิว / Hisense)',
+                name: '4. รุ่นใหญ่ 420 ลิตร (14.8 คิว)',
                 capacity: '420 ลิตร (14.8 คิว)',
                 type: 'chest',
                 dailyPrice: 1000,
@@ -500,7 +484,7 @@
             }
         ];
 
-        window.state = {
+        let state = {
             isAdmin: false,
             currentFilter: 'all',
             deliveryFee: 3000,
@@ -508,78 +492,117 @@
             phone: 'โทร / LINE: Person',
             line: '@phuketfreezer',
             location: 'ทั่วจังหวัดภูเก็ต',
-            products: []
+            products: [...initialProducts]
         };
 
-        async function ensureAuth() {
-            if (currentUser) return currentUser;
-            try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    const res = await signInWithCustomToken(auth, __initial_auth_token);
-                    currentUser = res.user;
-                    isCloudAvailable = true;
-                } else {
-                    const res = await signInAnonymously(auth);
-                    currentUser = res.user;
-                    isCloudAvailable = true;
+        // Firebase Cloud Sync & Persistence Variables
+        let db, auth;
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'phuket-freezer-rental-app-v5';
+
+        async function initCloudSync() {
+            if (window.firebaseApp && typeof __firebase_config !== 'undefined') {
+                try {
+                    const fb = window.firebaseApp;
+                    const app = fb.initializeApp(JSON.parse(__firebase_config));
+                    db = fb.getFirestore(app);
+                    auth = fb.getAuth(app);
+
+                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                        await fb.signInWithCustomToken(auth, __initial_auth_token);
+                    } else {
+                        await fb.signInAnonymously(auth);
+                    }
+
+                    const docRef = fb.doc(db, 'artifacts', appId, 'public', 'data', 'store_content');
+                    
+                    // Listen to real-time cloud updates so all viewers see edits instantly
+                    fb.onSnapshot(docRef, (docSnap) => {
+                        if (docSnap.exists()) {
+                            const cloudData = docSnap.data();
+                            if (cloudData.products && Array.isArray(cloudData.products)) state.products = cloudData.products;
+                            if (cloudData.deliveryFee !== undefined) state.deliveryFee = cloudData.deliveryFee;
+                            if (cloudData.depositFee !== undefined) state.depositFee = cloudData.depositFee;
+                            if (cloudData.phone) state.phone = cloudData.phone;
+                            if (cloudData.line) state.line = cloudData.line;
+                            if (cloudData.location) state.location = cloudData.location;
+
+                            renderProducts();
+                            renderSummaryTable();
+                            updateContactUI();
+                            document.getElementById('syncBadgeText').innerText = "ซิงก์ข้อมูลคลาวด์แบบเรียลไทม์";
+                        } else {
+                            saveToCloud(); // Initialize document if none exists
+                        }
+                    }, (error) => {
+                        console.warn("Cloud sync warning, falling back to local storage:", error);
+                        loadFromLocalStorage();
+                    });
+                } catch (e) {
+                    console.warn("Cloud connection error, using local storage mode:", e);
+                    loadFromLocalStorage();
                 }
-            } catch (err) {
-                console.warn("Firebase Auth fallback active:", err);
-                currentUser = { uid: 'local-session-user' };
-                isCloudAvailable = false;
+            } else {
+                loadFromLocalStorage();
             }
-            return currentUser;
         }
 
-        function updateSyncBadge(status) {
-            const dot = document.getElementById('syncDot');
-            const text = document.getElementById('syncText');
-            if (!dot || !text) return;
-
-            if (status === 'cloud') {
-                dot.className = "w-2 h-2 rounded-full bg-emerald-500 animate-pulse";
-                text.innerText = "บันทึกและซิงค์คลาวด์แล้ว";
-            } else {
-                dot.className = "w-2 h-2 rounded-full bg-amber-500";
-                text.innerText = "บันทึกในเครื่อง (Local Mode)";
+        async function saveToCloud() {
+            saveToLocalStorage(); // Backup locally always
+            if (db && auth) {
+                try {
+                    const fb = window.firebaseApp;
+                    const docRef = fb.doc(db, 'artifacts', appId, 'public', 'data', 'store_content');
+                    await fb.setDoc(docRef, {
+                        products: state.products,
+                        deliveryFee: state.deliveryFee,
+                        depositFee: state.depositFee,
+                        phone: state.phone,
+                        line: state.line,
+                        location: state.location,
+                        updatedAt: new Date().toISOString()
+                    });
+                } catch (e) {
+                    console.error("Failed to save to cloud:", e);
+                }
             }
         }
 
         function loadFromLocalStorage() {
-            const savedProducts = localStorage.getItem('phuket_freezer_products_v2');
-            const savedSettings = localStorage.getItem('phuket_freezer_settings_v2');
+            const savedProducts = localStorage.getItem('phuket_freezer_products_v5');
+            const savedSettings = localStorage.getItem('phuket_freezer_settings_v5');
 
             if (savedProducts) {
                 try {
-                    window.state.products = JSON.parse(savedProducts);
+                    state.products = JSON.parse(savedProducts);
                 } catch(e) {
-                    window.state.products = [...initialProducts];
+                    state.products = [...initialProducts];
                 }
-            } else {
-                window.state.products = [...initialProducts];
             }
 
             if (savedSettings) {
                 try {
                     const settings = JSON.parse(savedSettings);
-                    window.state.deliveryFee = settings.deliveryFee ?? 3000;
-                    window.state.depositFee = settings.depositFee ?? 3000;
-                    window.state.phone = settings.phone || 'โทร / LINE: Person';
-                    window.state.line = settings.line || '@phuketfreezer';
-                    window.state.location = settings.location || 'ทั่วจังหวัดภูเก็ต';
+                    state.deliveryFee = settings.deliveryFee ?? 3000;
+                    state.depositFee = settings.depositFee ?? 3000;
+                    state.phone = settings.phone || 'โทร / LINE: Person';
+                    state.line = settings.line || '@phuketfreezer';
+                    state.location = settings.location || 'ทั่วจังหวัดภูเก็ต';
                 } catch(e) {}
             }
+            renderProducts();
+            renderSummaryTable();
+            updateContactUI();
         }
 
         function saveToLocalStorage() {
             try {
-                localStorage.setItem('phuket_freezer_products_v2', JSON.stringify(window.state.products));
-                localStorage.setItem('phuket_freezer_settings_v2', JSON.stringify({
-                    deliveryFee: window.state.deliveryFee,
-                    depositFee: window.state.depositFee,
-                    phone: window.state.phone,
-                    line: window.state.line,
-                    location: window.state.location
+                localStorage.setItem('phuket_freezer_products_v5', JSON.stringify(state.products));
+                localStorage.setItem('phuket_freezer_settings_v5', JSON.stringify({
+                    deliveryFee: state.deliveryFee,
+                    depositFee: state.depositFee,
+                    phone: state.phone,
+                    line: state.line,
+                    location: state.location
                 }));
             } catch(e) {
                 console.error("Local storage error:", e);
@@ -607,95 +630,24 @@
             }, 3000);
         }
 
-        // Firestore Strict Path Strategy (RULE 1)
-        const productsCollectionRef = collection(db, 'artifacts', appId, 'public', 'data', 'products');
-        const settingsDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'general');
-
-        function setupRealtimeSync() {
-            if (!isCloudAvailable) {
-                loadFromLocalStorage();
-                renderProducts();
-                renderSummaryTable();
-                updateContactUI();
-                updateSyncBadge('local');
-                return;
-            }
-
-            // Products Realtime Firestore Sync
-            onSnapshot(productsCollectionRef, async (snapshot) => {
-                updateSyncBadge('cloud');
-                if (snapshot.empty) {
-                    for (const p of initialProducts) {
-                        const pDoc = doc(productsCollectionRef, p.id);
-                        await setDoc(pDoc, p);
-                    }
-                    return;
-                }
-
-                window.state.products = [];
-                snapshot.forEach(docSnap => {
-                    window.state.products.push({ id: docSnap.id, ...docSnap.data() });
-                });
-
-                // Sort Products numerically by ID or Name
-                window.state.products.sort((a,b) => (a.id > b.id ? 1 : -1));
-
-                saveToLocalStorage();
-                renderProducts();
-                renderSummaryTable();
-            }, (error) => {
-                console.warn("Firestore Notice:", error);
-                isCloudAvailable = false;
-                updateSyncBadge('local');
-                loadFromLocalStorage();
-                renderProducts();
-                renderSummaryTable();
-            });
-
-            // Settings Realtime Firestore Sync
-            onSnapshot(settingsDocRef, async (docSnap) => {
-                if (!docSnap.exists()) {
-                    await setDoc(settingsDocRef, {
-                        deliveryFee: 3000,
-                        depositFee: 3000,
-                        phone: 'โทร / LINE: Person',
-                        line: '@phuketfreezer',
-                        location: 'ทั่วจังหวัดภูเก็ต'
-                    });
-                    return;
-                }
-
-                const data = docSnap.data();
-                window.state.deliveryFee = data.deliveryFee ?? 3000;
-                window.state.depositFee = data.depositFee ?? 3000;
-                window.state.phone = data.phone || 'โทร / LINE: Person';
-                window.state.line = data.line || '@phuketfreezer';
-                window.state.location = data.location || 'ทั่วจังหวัดภูเก็ต';
-
-                saveToLocalStorage();
-                updateContactUI();
-            }, (error) => {
-                console.warn("Settings cloud sync fallback active.");
-            });
-        }
-
         function updateContactUI() {
-            document.getElementById('displayPhone').innerText = window.state.phone;
-            document.getElementById('displayLine').innerText = `LINE: ${window.state.line}`;
-            document.getElementById('displayLocation').innerText = `บริการจัดส่งถึงที่: ${window.state.location}`;
+            document.getElementById('displayPhone').innerText = state.phone;
+            document.getElementById('displayLine').innerText = `LINE: ${state.line}`;
+            document.getElementById('displayLocation').innerText = `บริการจัดส่งถึงที่: ${state.location}`;
             
-            document.getElementById('displayDeliveryFee').innerHTML = `${window.state.deliveryFee.toLocaleString()} <span class="text-sm font-normal text-slate-500">บาท (ทั่วภูเก็ต)</span>`;
-            document.getElementById('displayDepositFee').innerHTML = `${window.state.depositFee.toLocaleString()} <span class="text-sm font-normal text-slate-500">บาท / ตู้</span>`;
+            document.getElementById('displayDeliveryFee').innerHTML = `${state.deliveryFee.toLocaleString()} <span class="text-sm font-normal text-slate-500">บาท (ทั่วภูเก็ต)</span>`;
+            document.getElementById('displayDepositFee').innerHTML = `${state.depositFee.toLocaleString()} <span class="text-sm font-normal text-slate-500">บาท / ตู้</span>`;
         }
 
-        // Admin Toggle
-        window.toggleAdminMode = function() {
-            window.state.isAdmin = !window.state.isAdmin;
+        function toggleAdminMode() {
+            state.isAdmin = !state.isAdmin;
             updateAdminUI();
-            if (window.state.isAdmin) {
+            if (state.isAdmin) {
                 showToast("เข้าสู่โหมดผู้ดูแลระบบ (Admin) แล้ว");
+            } else {
+                showToast("ออกจากโหมดผู้ดูแลระบบแล้ว");
             }
-        };
+        }
 
         function updateAdminUI() {
             const btn = document.getElementById('toggleAdminBtn');
@@ -704,7 +656,7 @@
             const indicator = document.getElementById('adminIndicatorBar');
             const adminElements = document.querySelectorAll('.admin-only');
 
-            if (window.state.isAdmin) {
+            if (state.isAdmin) {
                 btn.className = "px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold transition-all duration-300 flex items-center gap-2 bg-amber-500 text-slate-900 border-amber-600 shadow-md";
                 dot.className = "w-2.5 h-2.5 rounded-full bg-slate-900 animate-pulse";
                 text.innerText = "กำลังอยู่ในโหมด Admin (คลิกเพื่อปิด)";
@@ -727,9 +679,9 @@
             if (!grid) return;
             grid.innerHTML = '';
 
-            const filtered = window.state.products.filter(p => {
-                if (window.state.currentFilter === 'all') return true;
-                return p.type === window.state.currentFilter;
+            const filtered = state.products.filter(p => {
+                if (state.currentFilter === 'all') return true;
+                return p.type === state.currentFilter;
             });
 
             if (filtered.length === 0) {
@@ -749,7 +701,6 @@
 
                 card.innerHTML = `
                     <div>
-                        <!-- Image Container with Fallback Support -->
                         <div class="relative h-56 bg-slate-100 overflow-hidden">
                             <img src="${displayImg}" 
                                  alt="${p.name}" 
@@ -759,19 +710,18 @@
                                 ${p.type === 'showcase' ? 'ตู้กระจกทรงสูง' : 'ตู้แช่ฝาทึบ'}
                             </span>
 
-                            ${window.state.isAdmin ? `
+                            ${state.isAdmin ? `
                             <div class="absolute top-3 right-3 flex gap-1.5 bg-slate-900/85 backdrop-blur-md p-1 rounded-xl shadow-lg z-20">
-                                <button onclick="window.openEditProductModal('${p.id}')" class="px-2.5 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold text-xs transition flex items-center gap-1">
+                                <button onclick="openEditProductModal('${p.id}')" class="px-2.5 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold text-xs transition flex items-center gap-1">
                                     <i class="fa-solid fa-pen"></i> แก้ไข
                                 </button>
-                                <button onclick="window.deleteProduct('${p.id}')" class="w-8 h-8 rounded-lg bg-rose-600 hover:bg-rose-500 text-white flex items-center justify-center text-xs transition" title="ลบ">
+                                <button onclick="deleteProduct('${p.id}')" class="w-8 h-8 rounded-lg bg-rose-600 hover:bg-rose-500 text-white flex items-center justify-center text-xs transition" title="ลบ">
                                     <i class="fa-solid fa-trash"></i>
                                 </button>
                             </div>
                             ` : ''}
                         </div>
 
-                        <!-- Card Details -->
                         <div class="p-5 space-y-3">
                             <h3 class="font-bold text-slate-900 text-lg leading-snug">${p.name}</h3>
 
@@ -786,7 +736,6 @@
                                 </p>
                             </div>
 
-                            <!-- Pricing Grid -->
                             <div class="bg-slate-50 p-3 rounded-xl border border-slate-200/80 grid grid-cols-3 gap-1 text-center mt-2">
                                 <div>
                                     <span class="block text-[10px] text-slate-400 font-medium uppercase">รายวัน</span>
@@ -807,7 +756,6 @@
                         </div>
                     </div>
 
-                    <!-- Contact CTA -->
                     <div class="p-5 pt-0">
                         <a href="#contact" class="w-full bg-slate-100 hover:bg-cyan-600 hover:text-white text-slate-700 font-medium text-xs py-2.5 rounded-xl transition flex items-center justify-center gap-2">
                             <i class="fa-regular fa-calendar-check"></i>
@@ -824,7 +772,7 @@
             if (!tbody) return;
             tbody.innerHTML = '';
 
-            window.state.products.forEach(p => {
+            state.products.forEach(p => {
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-slate-50 transition border-b border-slate-100";
                 tr.innerHTML = `
@@ -842,8 +790,7 @@
             });
         }
 
-        // Image Browsing / File Upload Processing (Base64 encoding for reliable persistence)
-        window.handleImageUpload = function(e) {
+        function handleImageUpload(e) {
             const file = e.target.files[0];
             if (!file) return;
 
@@ -851,12 +798,12 @@
             reader.onload = function(evt) {
                 const base64Img = evt.target.result;
                 document.getElementById('prodImage').value = base64Img;
-                window.updateImagePreview();
+                updateImagePreview();
             };
             reader.readAsDataURL(file);
-        };
+        }
 
-        window.updateImagePreview = function() {
+        function updateImagePreview() {
             const imgUrl = document.getElementById('prodImage').value.trim();
             const preview = document.getElementById('imagePreview');
             const placeholder = document.getElementById('imagePreviewPlaceholder');
@@ -873,24 +820,24 @@
                 placeholder.classList.remove('hidden');
                 clearBtn.classList.add('hidden');
             }
-        };
+        }
 
-        window.clearSelectedImage = function() {
+        function clearSelectedImage() {
             document.getElementById('prodImage').value = '';
             document.getElementById('prodImageFile').value = '';
-            window.updateImagePreview();
-        };
+            updateImagePreview();
+        }
 
-        window.openAddProductModal = function() {
+        function openAddProductModal() {
             document.getElementById('modalTitle').innerText = 'เพิ่มตู้แช่รุ่นใหม่';
             document.getElementById('editProductId').value = '';
             document.getElementById('productForm').reset();
-            window.clearSelectedImage();
+            clearSelectedImage();
             document.getElementById('productModal').classList.remove('hidden');
-        };
+        }
 
-        window.openEditProductModal = function(id) {
-            const p = window.state.products.find(item => item.id === id);
+        function openEditProductModal(id) {
+            const p = state.products.find(item => item.id === id);
             if (!p) return;
 
             document.getElementById('modalTitle').innerText = 'แก้ไขข้อมูลตู้แช่';
@@ -905,21 +852,16 @@
             document.getElementById('prodHighlight').value = p.highlight || '';
             document.getElementById('prodSuitable').value = p.suitable || '';
 
-            window.updateImagePreview();
+            updateImagePreview();
             document.getElementById('productModal').classList.remove('hidden');
-        };
+        }
 
-        window.closeProductModal = function() {
+        function closeProductModal() {
             document.getElementById('productModal').classList.add('hidden');
-        };
+        }
 
-        window.handleProductSubmit = async function(e) {
+        function handleProductSubmit(e) {
             e.preventDefault();
-
-            const saveBtn = document.getElementById('saveProductBtn');
-            const originalText = saveBtn.innerHTML;
-            saveBtn.disabled = true;
-            saveBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> <span>กำลังบันทึก...</span>`;
 
             const editId = document.getElementById('editProductId').value;
             const targetId = editId || Date.now().toString();
@@ -937,114 +879,62 @@
                 suitable: document.getElementById('prodSuitable').value
             };
 
-            // Local Memory Update First
-            const existingIdx = window.state.products.findIndex(p => p.id === targetId);
+            const existingIdx = state.products.findIndex(p => p.id === targetId);
             if (existingIdx >= 0) {
-                window.state.products[existingIdx] = productData;
+                state.products[existingIdx] = productData;
             } else {
-                window.state.products.push(productData);
+                state.products.push(productData);
             }
 
-            saveToLocalStorage();
+            saveToCloud();
             renderProducts();
             renderSummaryTable();
+            closeProductModal();
 
-            // Attempt Cloud Persistence (Firestore)
-            try {
-                await ensureAuth();
-                if (isCloudAvailable) {
-                    const targetDocRef = doc(productsCollectionRef, targetId);
-                    await setDoc(targetDocRef, productData, { merge: true });
-                }
-                window.closeProductModal();
-                showToast(editId ? "อัปเดตข้อมูลตู้แช่เรียบร้อย!" : "เพิ่มตู้แช่รุ่นใหม่เรียบร้อย!");
-            } catch (err) {
-                console.warn("Cloud save fallback to local:", err);
-                window.closeProductModal();
-                showToast("บันทึกข้อมูลเรียบร้อยแล้ว!");
-            } finally {
-                saveBtn.disabled = false;
-                saveBtn.innerHTML = originalText;
-            }
-        };
+            showToast(editId ? "อัปเดตข้อมูลตู้แช่เรียบร้อยแล้ว!" : "เพิ่มตู้แช่รุ่นใหม่เรียบร้อยแล้ว!");
+        }
 
-        window.deleteProduct = async function(id) {
+        function deleteProduct(id) {
             if (!confirm('คุณแน่ใจหรือไม่ว่าต้องการลบรายการตู้แช่นี้?')) return;
 
-            window.state.products = window.state.products.filter(p => p.id !== id);
-            saveToLocalStorage();
+            state.products = state.products.filter(p => p.id !== id);
+            saveToCloud();
             renderProducts();
             renderSummaryTable();
+            showToast("ลบรายการตู้แช่ออกจากระบบแล้ว");
+        }
 
-            try {
-                await ensureAuth();
-                if (isCloudAvailable) {
-                    const targetDocRef = doc(productsCollectionRef, id);
-                    await deleteDoc(targetDocRef);
-                }
-                showToast("ลบรายการตู้แช่ออกจากระบบแล้ว");
-            } catch (err) {
-                console.warn("Cloud delete notice:", err);
-                showToast("ลบรายการตู้แช่เรียบร้อยแล้ว");
-            }
-        };
-
-        window.openSettingsModal = function() {
-            document.getElementById('inputPhone').value = window.state.phone;
-            document.getElementById('inputLine').value = window.state.line;
-            document.getElementById('inputLocation').value = window.state.location;
-            document.getElementById('inputDelivery').value = window.state.deliveryFee;
-            document.getElementById('inputDeposit').value = window.state.depositFee;
+        function openSettingsModal() {
+            document.getElementById('inputPhone').value = state.phone;
+            document.getElementById('inputLine').value = state.line;
+            document.getElementById('inputLocation').value = state.location;
+            document.getElementById('inputDelivery').value = state.deliveryFee;
+            document.getElementById('inputDeposit').value = state.depositFee;
             document.getElementById('settingsModal').classList.remove('hidden');
-        };
+        }
 
-        window.closeSettingsModal = function() {
+        function closeSettingsModal() {
             document.getElementById('settingsModal').classList.add('hidden');
-        };
+        }
 
-        window.handleSettingsSubmit = async function(e) {
+        function handleSettingsSubmit(e) {
             e.preventDefault();
 
-            const saveBtn = document.getElementById('saveSettingsBtn');
-            saveBtn.disabled = true;
-            saveBtn.innerText = 'กำลังบันทึก...';
+            state.phone = document.getElementById('inputPhone').value;
+            state.line = document.getElementById('inputLine').value;
+            state.location = document.getElementById('inputLocation').value;
+            state.deliveryFee = parseFloat(document.getElementById('inputDelivery').value) || 0;
+            state.depositFee = parseFloat(document.getElementById('inputDeposit').value) || 0;
 
-            const updatedSettings = {
-                phone: document.getElementById('inputPhone').value,
-                line: document.getElementById('inputLine').value,
-                location: document.getElementById('inputLocation').value,
-                deliveryFee: parseFloat(document.getElementById('inputDelivery').value) || 0,
-                depositFee: parseFloat(document.getElementById('inputDeposit').value) || 0
-            };
-
-            window.state.phone = updatedSettings.phone;
-            window.state.line = updatedSettings.line;
-            window.state.location = updatedSettings.location;
-            window.state.deliveryFee = updatedSettings.deliveryFee;
-            window.state.depositFee = updatedSettings.depositFee;
-
-            saveToLocalStorage();
+            saveToCloud();
             updateContactUI();
+            closeSettingsModal();
 
-            try {
-                await ensureAuth();
-                if (isCloudAvailable) {
-                    await setDoc(settingsDocRef, updatedSettings, { merge: true });
-                }
-                window.closeSettingsModal();
-                showToast("บันทึกข้อมูลติดต่อและค่าบริการเรียบร้อย!");
-            } catch (err) {
-                console.warn("Cloud settings notice:", err);
-                window.closeSettingsModal();
-                showToast("บันทึกข้อมูลเรียบร้อยแล้ว!");
-            } finally {
-                saveBtn.disabled = false;
-                saveBtn.innerText = 'บันทึกข้อมูล';
-            }
-        };
+            showToast("บันทึกข้อมูลติดต่อและค่าบริการเรียบร้อย!");
+        }
 
-        window.filterProducts = function(type) {
-            window.state.currentFilter = type;
+        function filterProducts(type) {
+            state.currentFilter = type;
             document.querySelectorAll('.filter-btn').forEach(btn => {
                 btn.classList.remove('bg-white', 'text-slate-900', 'shadow-sm');
                 btn.classList.add('text-slate-600');
@@ -1055,19 +945,12 @@
                 activeBtn.classList.remove('text-slate-600');
             }
             renderProducts();
-        };
+        }
 
         // Initial Boot
-        window.onload = async function() {
+        window.onload = function() {
             document.getElementById('year').innerText = new Date().getFullYear();
-            
-            loadFromLocalStorage();
-            renderProducts();
-            renderSummaryTable();
-            updateContactUI();
-
-            await ensureAuth();
-            setupRealtimeSync();
+            initCloudSync();
         };
     </script>
 </body>
